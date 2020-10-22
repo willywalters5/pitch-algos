@@ -1,0 +1,12 @@
+Open praat software
+Under "Praat Object" window,  click "New->Record mono Sound"
+Under "SoundRecorder" window, make sure to select "mono" in Channels and "12000Hz" in Sampling frequency
+Click "Record"
+Make sure the voice meter always stays at green when you record. If the voice meter turns yellow or red, it's complaining your mouth is getting too close to the microphone.
+Name the recording as "index+speaker type", e.g., 1_AF, in the textbox on the lower right corner
+Click "Save to list"
+Under "Praat Object" window, select the voice object you just record, click "View & Edit"
+Under the new popped up Sound window, you would see the recorded waveform and spectrogram
+If you want to view the pitch in praat, select "Pitch->Show pitch"
+Select the beginning and the end of the utterance, and you should see the selected section is highlighted in red
+Click "File->Save selected sound as 32-bit WAV file"
