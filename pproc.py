@@ -6,6 +6,8 @@ def generate_filter(filterType, fs=12000):
     args: 
         str filterType -> {'900Hz FIRLS_LPF'}
         int fs -> sampling rate (defaults to 12000 for python)
+    return:
+        myFilter -> np.array of the filter coefficients
     '''
     #if filterType == ...
     # TODO: add different filter types
@@ -16,9 +18,91 @@ def generate_filter(filterType, fs=12000):
     myFilter = signal.firls(numtaps, bands, gain, fs=fs)
     return myFilter
     
-def filter_audio(filename, filter):
+def filter_audio(sound, filter):
     '''
     Apply the given filter to the given audio file
+    args:
+        sound -> np.array from parselmouth sound
+        filter -> np.array from generate_filter
+    '''
+    # TODO: test application methods? 
+    #       Implement without buit-ins
+    #       Wil this work with all filter types?
+    filteredSound = signal.lfilter(filter, 1, sound)
+
+    return filteredSound
+
+def simple_peaks_helper(sound):
+    '''
+    Find each local min/max
+    return:
+        [m1, m4]
+            m1 -> np.array of local maxes
+            m4 -> np.array of local mins
+    '''
+    # TODO: No built-ins
+    m1 = signal.argrelextrema(sound, np.greater)
+    m4 = signal.argrelextrema(sound, np.less)
+    return [m1, m4]
+
+def peak_valley_helper(m1, m4):
+    '''
+    Find distance between mins and maxes
+    return:
+        [m2, m5]
+            m2 -> np.array of abs(max)-abs(prev_min)
+            m5 -> np.array of abs(prev_max) - abs(min)
+    '''
+    m2 = np.zeros(m1.size)
+    m5 = np.zeros(m4.size)
+    m1NonZeroIdx = np.array(np.nonzero(m1)).flatten()
+    m4NonZeroIdx = np.array(np.nonzero(m4)).flatten()
+    # TODO: Test all cases
+    # First peak before first valley
+    if(m1NonZeroIdx[0] < m4NonZeroIdx[0]):
+        m2[m1NonZeroIdx[0]] = m1[m1NonZeroIdx[0]]
+        m5[m4NonZeroIdx[0]] = np.abs(m1[m1NonZeroIdx[0]]) - np.abs(m4[m4NonZeroIdx[0]])
+        for i in range(1, len(m1NonZeroIdx)):
+            m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i-1]])
+            # Check bounds
+            if i < len(m4NonZeroIdx):
+                m5[m4NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
+    # First peak after first valley
+    else:
+        m5[m4NonZeroIdx[0]] = m4[m4NonZeroIdx[0]]
+        for i in range(len(m1NonZeroIdx)):
+            m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
+            # Check bounds
+            if i + 1 < len(m4NonZeroIdx):
+                m5[m4NonZeroIdx[i+1]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i+1]]) 
+    
+    return [m2, m5]
+
+def adj_peak_helper(m1, m4):
+    '''
+    Find the difference between adjacent peaks
+    return:
+        [m2, m5]
+            m2 -> np.array of peak to peak differences
+            m5 -> np.array of valley to valley differences
     '''
     return
-    
+
+
+def find_peaks(sound):
+    '''
+    Get the pulse heights [m1...m6]
+    broken down for each pair [m1,m4], [m2,m5], [m3,m6]
+    '''
+    m1 = np.zeros(sound.shape)
+    m2 = np.zeros(sound.shape)
+    m3 = np.zeros(sound.shape)
+    m4 = np.zeros(sound.shape)
+    m5 = np.zeros(sound.shape)
+    m6 = np.zeros(sound.shape)
+
+    m1Idx, m4Idx = simple_peaks_helper(sound)
+    m1[m1Idx] = sound[m1Idx]
+    m4[m4Idx] = sound[m4Idx]
+    m2, m5 = peak_valley_helper(m1, m4)
+    return [m1, m2, m3, m4, m5, m6]
