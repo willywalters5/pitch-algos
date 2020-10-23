@@ -42,17 +42,31 @@ def test_filter_audio(fs=12000):
 
 def test_find_peaks(fs=12000):
     # TODO: More logical test array, better test than printing
-    # TODO: Could create plots with signal overlayed :)
-    x = np.linspace(0,2*np.pi,fs)
-    simple_test = np.sin(np.pi/2*x) + .3 #np.array([1,2,3,2,5,1])
+    # TODO: Add key for different colors
+    #   Maybe make seperate subplots for each color to make it more clear what is what
+    x = np.linspace(0,4*np.pi,fs*2)
+    simple_test = (np.sin(np.pi*x)*np.sin(np.pi/2*x)) + .3 #np.array([1,2,3,2,5,1])
     simpleMs = pproc.find_peaks(simple_test)
-    #plt.figure()
-    #plt.plot(x,simple_test)
-    #plt.show()
-    print(simpleMs[0][np.nonzero(simpleMs[0])])
-    print(simpleMs[3][np.nonzero(simpleMs[3])])
-    print(simpleMs[1][np.nonzero(simpleMs[1])])
-    print(simpleMs[4][np.nonzero(simpleMs[4])])
+    plt.figure()
+    plt.plot(x,simple_test, '-k')
+    #print("Pair 1:")
+    #print(simpleMs[0][np.nonzero(simpleMs[0])])
+    #print(simpleMs[3][np.nonzero(simpleMs[3])])
+    plt.plot(x[np.nonzero(simpleMs[0])], simpleMs[0][np.nonzero(simpleMs[0])], 'ro')
+    plt.plot(x[np.nonzero(simpleMs[3])], simpleMs[3][np.nonzero(simpleMs[3])], 'r.')
+    #print(simpleMs[0].shape)
+
+    #print("Pair 2:")
+    plt.plot(x[np.nonzero(simpleMs[1])], simpleMs[1][np.nonzero(simpleMs[1])], 'bo')
+    plt.plot(x[np.nonzero(simpleMs[4])], simpleMs[4][np.nonzero(simpleMs[4])], 'b.')
+    #print(simpleMs[1][np.nonzero(simpleMs[1])])
+    #print(simpleMs[4][np.nonzero(simpleMs[4])])
+    #print("Pair 3:")
+    plt.plot(x[np.nonzero(simpleMs[2])], simpleMs[2][np.nonzero(simpleMs[2])], 'go')
+    plt.plot(x[np.nonzero(simpleMs[5])], simpleMs[5][np.nonzero(simpleMs[5])], 'g.')
+    #print(simpleMs[2][np.nonzero(simpleMs[2])])
+    #print(simpleMs[5][np.nonzero(simpleMs[5])])
+    plt.show()
     return
 
 

@@ -81,12 +81,30 @@ def peak_valley_helper(m1, m4):
 def adj_peak_helper(m1, m4):
     '''
     Find the difference between adjacent peaks
+    NOTE: The heights start at first peak and look ahead
+    NOTE: Uncertain what should be done in case of 1 peak
+        I guess in a real scenario it wouldn't matter
     return:
-        [m2, m5]
+        [m3, m6]
             m2 -> np.array of peak to peak differences
             m5 -> np.array of valley to valley differences
     '''
-    return
+    m3 = np.zeros(m1.size)
+    m6 = np.zeros(m4.size)
+    m1NonZeroIdx = np.array(np.nonzero(m1)).flatten()
+    m4NonZeroIdx = np.array(np.nonzero(m4)).flatten()
+    startLen = len(m1NonZeroIdx) - len(m1NonZeroIdx)%2
+    if len(m1NonZeroIdx) > 1:
+        for i in range(0, startLen, 2):
+            if m1NonZeroIdx[i+1] > m1NonZeroIdx[i]:
+                m3[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i+1]] - m1[m1NonZeroIdx[i]])
+    startLen = len(m4NonZeroIdx) - len(m4NonZeroIdx)%2
+    if len(m4NonZeroIdx) > 1:
+        for i in range(0, startLen, 2):
+            if m4NonZeroIdx[i+1] > m4NonZeroIdx[i]:
+                m6[m4NonZeroIdx[i]] = np.abs(m6[m4NonZeroIdx[i+1]] - m6[m4NonZeroIdx[i]])
+
+    return [m3, m6]
 
 
 def find_peaks(sound):
@@ -105,4 +123,13 @@ def find_peaks(sound):
     m1[m1Idx] = sound[m1Idx]
     m4[m4Idx] = sound[m4Idx]
     m2, m5 = peak_valley_helper(m1, m4)
+    # TODO: is m6 working?
+    m3, m6 = adj_peak_helper(m1, m4)
+    # Convert everything to positive impulses
+    m1 = np.abs(np.array(m1))
+    m2 = np.abs(np.array(m2))
+    m3 = np.abs(np.array(m3))
+    m4 = np.abs(np.array(m4))
+    m5 = np.abs(np.array(m5))
+    m6 = np.abs(np.array(m6))
     return [m1, m2, m3, m4, m5, m6]
