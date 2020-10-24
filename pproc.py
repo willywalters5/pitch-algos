@@ -11,14 +11,22 @@ def generate_filter(filterType, fs=12000):
     '''
     #if filterType == ...
     # TODO: add different filter types
+    #   Try something like signal.firfilt or signal.remez
     # TODO: test numtaps, possibly have it as arg into generate filter
+    '''
     numtaps = 53
     bands = [0, 100, 800, 900, 1000, fs/2]
     gain = [1, 1, 1, 0, 0, 0]
     myFilter = signal.firls(numtaps, bands, gain, fs=fs)
+    '''
+    cutoff = 900
+    trans_width = 100  # Width of transition from pass band to stop band, Hz
+    numtaps = 300      # Size of the FIR filter.
+    myFilter = signal.remez(numtaps, [0, cutoff, cutoff + trans_width, 0.5*fs], [1, 0], Hz=fs)
+    
     return myFilter
     
-def filter_audio(sound, filter):
+def filter_audio(sound, mFilter):
     '''
     Apply the given filter to the given audio file
     args:
@@ -27,8 +35,13 @@ def filter_audio(sound, filter):
     '''
     # TODO: test application methods? 
     #       Implement without buit-ins
+    #           Implement with circular convolution
     #       Wil this work with all filter types?
-    filteredSound = signal.lfilter(filter, 1, sound)
+    filteredSound = signal.lfilter(mFilter, 1, sound)
+    #filteredSound = np.zeros(sound.shape)
+    #print(sound.shape)
+    #print(mFilter.shape)
+    #filteredSound = np.convolve(sound, mFilter, mode='same')
 
     return filteredSound
 
@@ -132,4 +145,50 @@ def find_peaks(sound):
     m4 = np.abs(np.array(m4))
     m5 = np.abs(np.array(m5))
     m6 = np.abs(np.array(m6))
-    return [m1, m2, m3, m4, m5, m6]
+    return[m1, m2, m3, m4, m5, m6]
+
+def peak_rundown(m, fs=12000):
+    '''
+    Elementry period detection using a peak rundown circuit
+    TODO: Initial condition for Pav?
+    TODO: Limit Pav to be between 4 ms and 10 ms (or somethin else to match our sample rate)
+    NOTE: We must convert samples to ms
+        y (samples) = fs/1000 * x(ms)
+        Pav -> in ms
+        tau -> in ms
+        beta -> in samples
+        i -> in samples
+    input:
+        m -> np.array of pulse train
+    return:
+        Pav -> smoothed period estimate
+    '''
+    msToSamples = fs/1000 # Multiply to get samples, divide to get ms
+    Pav_prev = 0
+    Pnew = 0
+    # Find first peak
+    if(len(np.nonzero(m)[0]) !=0 ):
+        start = np.nonzero(m)[0][0]
+    else:
+        start = len(m)
+    lastPeak = start
+    Pav = 4
+    beta = (Pav/.695)*msToSamples
+
+    # Start blanking
+    tau = .4*Pav
+    for i in range(start, len(m)):
+        if tau <= 0:
+            # Start exponential decay, if peak exceeds exponential decay update period and restart blanking 
+            if m[i] > m[lastPeak]*np.exp(-beta*i):
+                Pnew = (i - lastPeak)/msToSamples
+                temp = Pav
+                Pav = (Pav_prev + Pnew)/2
+                Pav_prev = temp
+                lastPeak = i
+                tau = .4 * Pav
+                beta = (Pav/.695)*msToSamples
+        else:
+            tau -= 1*msToSamples
+
+    return Pav
