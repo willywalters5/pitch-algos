@@ -52,4 +52,5 @@ def compute_pitch_praat(wav_file,computed_pitch=[],draw_pitch_contour=True):
         plt.xlim([snd.xmin, snd.xmax])
         #plt.show()
         plt.savefig("CEP/{}.png".format(filename))
+        plt.close()
     return pitch.selected_array['frequency']

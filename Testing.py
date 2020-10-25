@@ -25,8 +25,12 @@ def compute_errors(pitch,pitch_praat,rate,print_result=False):
     mean_error=np.mean(fine_error_pitch_peroids)
     std_error=np.sqrt(np.mean(np.square(fine_error_pitch_peroids))-mean_error*mean_error)
 
-    voiced_to_unvoiced_error=len(np.setdiff1d(voiced_frames_praat,voiced_frames))/len(voiced_frames_praat)
-    unvoiced_to_voiced_error=len(np.setdiff1d(unvoiced_frames_praat,unvoiced_frames))/len(unvoiced_frames_praat)
+    voiced_to_unvoiced_error=0
+    unvoiced_to_voiced_error=0
+    if len(voiced_frames_praat)!=0:
+        voiced_to_unvoiced_error=len(np.setdiff1d(voiced_frames_praat,voiced_frames))/len(voiced_frames_praat)
+    if len(unvoiced_frames_praat)!=0:
+        unvoiced_to_voiced_error=len(np.setdiff1d(unvoiced_frames_praat,unvoiced_frames))/len(unvoiced_frames_praat)
 
     if print_result:
         print("Gross Error Count: {}/{}".format(gross_error_count,len(error_value)))
