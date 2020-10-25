@@ -1,7 +1,7 @@
 import numpy as np
 from pitch_parselmouth import compute_pitch_praat
 
-def compute_errors(pitch,pitch_praat):
+def compute_errors(pitch,pitch_praat,rate,print_result=False):
     '''
     Calculate five error parameters given pitch contour
     pitch(numpy array): computed pitch contour, unvoiced frames should set pitch value as 0
@@ -10,25 +10,59 @@ def compute_errors(pitch,pitch_praat):
     return: None
     '''
     assert len(pitch)==len(pitch_praat)
-    error_value=np.abs(pitch-pitch_praat)
-
-    gross_error_count=np.sum(np.where(error_value>=10))
-    print("Gross Error Count: ", gross_error_count)
-
-    fine_error_pitch_peroids=error_value[np.where(error_value<10)]
-    mean_error=np.mean(fine_error_pitch_peroids)
-    print("Mean of the Fine Pitch Errors: ", mean_error)
-
-    std_error=np.sqrt(np.mean(np.square(fine_error_pitch_peroids))-mean_error*mean_error)
-    print("Standard Deviation of the Fine Pitch Errors: ",std_error)
 
     unvoiced_frames=np.where(pitch==0)[0]
     voiced_frames=np.where(pitch!=0)[0]
     unvoiced_frames_praat=np.where(pitch_praat==0)[0]
     voiced_frames_praat=np.where(pitch_praat!=0)[0]
 
-    voiced_to_unvoiced_error=np.setdiff1d(voiced_frames_praat,voiced_frames)/len(voiced_frames_praat)
-    print("Voiced-to-Unvoiced Error Rate: ", voiced_to_unvoiced_error)
+    voiced_frames_both=np.intersect1d(voiced_frames,voiced_frames_praat)
+    error_value=np.abs(pitch[voiced_frames_both]-pitch_praat[voiced_frames_both])
+    #print(pitch[voiced_frames_both],pitch_praat[voiced_frames_both],error_value)
+    gross_error_count=np.sum(np.where(error_value>=rate*0.001,1,0))
 
-    unvoiced_to_voiced_error=np.setdiff1d(unvoiced_frames_praat,unvoiced_frames)/len(unvoiced_frames_praat)
-    print("Unviced-to-voiced Error Rate: ", unvoiced_to_voiced_error)
+    fine_error_pitch_peroids=error_value[np.where(error_value<rate*0.001)]
+    mean_error=np.mean(fine_error_pitch_peroids)
+    std_error=np.sqrt(np.mean(np.square(fine_error_pitch_peroids))-mean_error*mean_error)
+
+    voiced_to_unvoiced_error=len(np.setdiff1d(voiced_frames_praat,voiced_frames))/len(voiced_frames_praat)
+    unvoiced_to_voiced_error=len(np.setdiff1d(unvoiced_frames_praat,unvoiced_frames))/len(unvoiced_frames_praat)
+
+    if print_result:
+        print("Gross Error Count: {}/{}".format(gross_error_count,len(error_value)))
+        print("Mean of the Fine Pitch Errors: ", mean_error)
+        print("Standard Deviation of the Fine Pitch Errors: ",std_error)
+        print("Voiced-to-Unvoiced Error Rate: ", voiced_to_unvoiced_error)
+        print("Unviced-to-voiced Error Rate: ", unvoiced_to_voiced_error)
+        print("\n")
+
+    return gross_error_count,len(voiced_frames_both),mean_error,std_error,\
+        len(np.setdiff1d(voiced_frames_praat,voiced_frames)),len(voiced_frames_praat),\
+        len(np.setdiff1d(unvoiced_frames_praat,unvoiced_frames)),len(unvoiced_frames_praat)
+
+def compute_errors_mean(pitches,pitches_praat,rate=12000):
+    gross_error_count=0
+    total_error_len=0
+    mean_error=0
+    std_error=0
+    voiced_to_unvoiced_error=0
+    voiced_frames_praat=0
+    unvoiced_to_voiced_error=0
+    unvoiced_frames_praat=0
+
+    for i in range(len(pitches)):
+        results=compute_errors(pitches[i],pitches_praat[i],rate,False)
+        gross_error_count+=results[0]
+        total_error_len+=results[1]
+        mean_error+=results[2]
+        std_error+=results[3]
+        voiced_to_unvoiced_error+=results[4]
+        voiced_frames_praat+=results[5]
+        unvoiced_to_voiced_error+=results[6]
+        unvoiced_frames_praat+=results[7]
+    print("Average of five error measurements:")
+    print("Gross Error Count: ",(gross_error_count/total_error_len))
+    print("Mean of the Fine Pitch Errors: ", mean_error/len(pitches))
+    print("Standard Deviation of the Fine Pitch Errors: ",std_error/len(pitches))
+    print("Voiced-to-Unvoiced Error Rate: ", voiced_to_unvoiced_error/voiced_frames_praat)
+    print("Unviced-to-voiced Error Rate: ", unvoiced_to_voiced_error/unvoiced_frames_praat)
