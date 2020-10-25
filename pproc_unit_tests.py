@@ -1,5 +1,5 @@
 import pproc
-#import pitch_parselmouth
+import pitch_parselmouth
 import parselmouth
 from matplotlib import pyplot as plt
 import scipy.signal as signal
@@ -109,7 +109,7 @@ def test_peak_rundown_helper(m, fs=12000):
             if m[i] > m[lastPeak]*np.exp(-beta*i):
                 Pnew = (i - lastPeak)/msToSamples
                 temp = Pav
-                Pav = min(max(4, (Pav_prev + Pnew)/2), 10)
+                Pav = (Pav_prev + Pnew)/2
                 Pav_prev = temp
                 lastPeak = i
                 tau = .4 * Pav
@@ -186,12 +186,24 @@ def test_all(filename, fs=12000, frameSize=None):
 
     return
 
+def test_pproc_full(filename, framesize=.043, fs=12000):
+    sound = parselmouth.Sound(filename)
+    soundMono = np.array(sound.convert_to_mono()).flatten()
+    pitches = pproc.pproc_calculate_pitch(soundMono, framesize=framesize)
+    print(len(np.nonzero(pitches)))
+    t = np.array(np.nonzero(pitches)).flatten()
+    print(1/pitches[t])
+    pitch_parselmouth.compute_pitch_praat(filename, 1/pitches[t], computed_pitch_xs=t/fs)
+    plt.plot()
+    return
 
 #test_generate_filters()
 #test_filter_audio()
 #test_find_peaks()
-#test_all("PureTones/100Hz.wav", frameSize=2*.032)
-test_all("PureTones/100Hz.wav")
+test_all("PureTones/100Hz.wav", frameSize=.032)
+#test_all("PureTones/100Hz.wav")
+#test_pproc_full("PureTones/100Hz.wav")
+#test_pproc_full("Recordings/1_AF1.wav", framesize=.032)
 
 
 
