@@ -14,15 +14,18 @@ def draw_spectrogram(spectrogram, dynamic_range=70):
     plt.xlabel("time [s]")
     plt.ylabel("frequency [Hz]")
 
-def draw_pitch_praat(pitch,computed_pitch=None):
+def draw_pitch_praat(pitch,computed_pitch=None, computed_pitch_xs=None):
     # Extract selected pitch contour, and
     # replace unvoiced samples by NaN to not plot
     pitch_values = pitch.selected_array['frequency']
     pitch_values[pitch_values==0] = np.nan
     plt.plot(pitch.xs(), pitch_values, 'o', markersize=5, color='w',label="praat")
     #plt.plot(pitch.xs(), pitch_values, 'o', markersize=2)
-    if computed_pitch:
-        plt.plot(pitch.xs(), computed_pitch,'o',markersize=5,color="r",label="computed")
+    if computed_pitch.all() != None:
+        if computed_pitch_xs.all() != None:
+            plt.plot(computed_pitch_xs, computed_pitch,'o',markersize=5,color="r",label="computed")
+        else:
+            plt.plot(pitch.xs(), computed_pitch,'o',markersize=5,color="r",label="computed")
         #plt.plot(pitch.xs(), computed_pitch, 'o', markersize=2)
 
     plt.grid(False)
@@ -30,7 +33,7 @@ def draw_pitch_praat(pitch,computed_pitch=None):
     plt.legend(facecolor='white', framealpha=0.5)
     plt.ylabel("fundamental frequency [Hz]")
 
-def compute_pitch_praat(wav_file,computed_pitch=None,draw_pitch_contour=True):
+def compute_pitch_praat(wav_file,computed_pitch=None,computed_pitch_xs=None,draw_pitch_contour=True):
     '''
     Return pitch contour generated from praat; Draw pitch contour overlaid with spectrogram given the wav file
     wav_file(str): wav file name
@@ -46,9 +49,9 @@ def compute_pitch_praat(wav_file,computed_pitch=None,draw_pitch_contour=True):
         plt.figure()
         draw_spectrogram(spectrogram)
         plt.twinx()
-        draw_pitch_praat(pitch,computed_pitch)
+        draw_pitch_praat(pitch,computed_pitch,computed_pitch_xs=computed_pitch_xs)
         plt.xlim([snd.xmin, snd.xmax])
         plt.show()
     return pitch.selected_array['frequency']
 
-pitch_value=compute_pitch_praat("sample_wav.wav")
+#pitch_value=compute_pitch_praat("Recordings/1_AF1.wav")

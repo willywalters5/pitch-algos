@@ -56,8 +56,9 @@ def simple_peaks_helper(sound):
             m4 -> np.array of local mins
     '''
     # TODO: No built-ins
-    m1 = signal.argrelextrema(sound, np.greater)
-    m4 = signal.argrelextrema(sound, np.less)
+    # NOTE: Changed to xxx_equal to get rid of errors in unit test
+    m1 = signal.argrelextrema(sound, np.greater_equal)
+    m4 = signal.argrelextrema(sound, np.less_equal)
     return [m1, m4]
 
 def peak_valley_helper(m1, m4):
@@ -78,7 +79,8 @@ def peak_valley_helper(m1, m4):
         m2[m1NonZeroIdx[0]] = m1[m1NonZeroIdx[0]]
         m5[m4NonZeroIdx[0]] = np.abs(m1[m1NonZeroIdx[0]]) - np.abs(m4[m4NonZeroIdx[0]])
         for i in range(1, len(m1NonZeroIdx)):
-            m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i-1]])
+            if i-1 < len(m4NonZeroIdx):
+                m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i-1]])
             # Check bounds
             if i < len(m4NonZeroIdx):
                 m5[m4NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
@@ -86,7 +88,8 @@ def peak_valley_helper(m1, m4):
     else:
         m5[m4NonZeroIdx[0]] = m4[m4NonZeroIdx[0]]
         for i in range(len(m1NonZeroIdx)):
-            m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
+            if i < len(m4NonZeroIdx):
+                m2[m1NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
             # Check bounds
             if i + 1 < len(m4NonZeroIdx):
                 m5[m4NonZeroIdx[i+1]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i+1]]) 
@@ -149,16 +152,16 @@ def find_peaks(sound):
     m6 = np.abs(np.array(m6))
     return[m1, m2, m3, m4, m5, m6]
 
-def peak_rundown(m, fs=12000):
+def peak_rundown(m, t, fs=12000):
     '''
     Elementry period detection using a peak rundown circuit
     TODO: Initial condition for Pav?
     TODO: Limit Pav to be between 4 ms and 10 ms (???)
     NOTE: We must convert samples to ms
         y (samples) = fs/1000 * x(ms)
-        Pav -> in ms
-        tau -> in ms
-        beta -> in samples
+        Pav -> in s
+        tau -> in s
+        beta -> in s
         i -> in samples
     NOTE: Can probably be done in parallel for each m
     input:
@@ -166,33 +169,43 @@ def peak_rundown(m, fs=12000):
     return:
         Pav -> smoothed period estimate
     '''
-    msToSamples = fs/1000 # Multiply to get samples, divide to get ms
+    m = m[2:len(m)]
     Pav_prev = 0
     Pnew = 0
-    # Find first peak
-    if(len(np.nonzero(m)[0]) !=0 ):
-        start = np.nonzero(m)[0][0]
+    # Find first peak (excluding first sample)
+    if(len(np.array(np.nonzero(m)).flatten()) != 0):
+        start = np.array(np.nonzero(m)).flatten()[0] # np.nonzero(m)[0][0]
+        #if(start == 0):
+        #    start = np.array(np.nonzero(m)).flatten()[1]
     else:
         start = len(m)
     lastPeak = start
-    Pav = 4
-    beta = (Pav/.695)*msToSamples
-
+    Pav = 0#4/1000
+    beta = ((4/1000)/.695)
+    #print(start)
+    #print(len(m))
+    #print(np.array(np.nonzero(m)).flatten())
     # Start blanking
-    tau = .4*Pav
+    tau = .4*(4/1000)
     for i in range(start, len(m)):
         if tau <= 0:
-            # Start exponential decay, if peak exceeds exponential decay update period and restart blanking 
-            if m[i] > m[lastPeak]*np.exp(-beta*i):
-                Pnew = (i - lastPeak)/msToSamples
+            # Start exponential decay, if peak exceeds exponential decay update period and restart blanking
+            if m[i] > m[lastPeak]*np.exp(-beta*(t[i]-t[lastPeak])) and m[i] > 0 and i != 0:
+                Pnew = t[i] - t[lastPeak]#(i - lastPeak)/fs
+                #print("i: {} FreqNew: {}".format(i, 1/Pnew))
                 temp = Pav
                 Pav = (Pav_prev + Pnew)/2
+                #print(Pav_prev)
+                #print(1/Pav)
                 Pav_prev = temp
                 lastPeak = i
-                tau = .4 * Pav
-                beta = (Pav/.695)*msToSamples
+                tau = .4*min(max(Pav, 4/1000), 10/1000) #Pav
+                beta = (min(max(Pav, 4/1000), 10/1000)/.695) #(Pav/.695)
         else:
-            tau -= 1*msToSamples
+            tau -= 1/fs
+
+    if Pav == 0:
+        Pav = 1
 
     return Pav
 
@@ -303,15 +316,19 @@ def calculate_coincidence(peMatrix, bias):
 
     # Check ppe_i to all elements
     for i in range(6):
+        coincidences[i] -= bias
         # Find the coincidence window length (threshold) for ppe_i
         threshold = findThreshold(peMatrix[0][i], bias)
         for x in range(6):
             for y in range(6):
                 # NOTE: we are checking when peMatrix[0][i] == peMatrix[y][x] but that shouldn't matter
-                if np.abs(peMatrix[0][i] - peMatrix[y][x]) < threshold:
+                if np.abs(peMatrix[0][i] - peMatrix[y][x]) < threshold and (0 != y and x != i):
+                #if np.abs(peMatrix[0][i] - peMatrix[y][x])/peMatrix[0][i] >= threshold and (0 != y and x != i):
                     coincidences[i] += 1
 
     winnerIdx = np.argmax(coincidences)
+    #print(1/peMatrix[0][:])
+    #print(coincidences)
     winnerVal = coincidences[winnerIdx]
     return (winnerIdx, winnerVal)
 
@@ -330,7 +347,7 @@ def calculate_ppe_winner(peMatrix):
 
     return winner
 
-def pproc_calculate_pitch(sound, framesize=.043, fs=12000):
+def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
     '''
     Combine the entire pproc algorith into one easy to use function
     TODO: What to do with potential leftover frames
@@ -342,7 +359,7 @@ def pproc_calculate_pitch(sound, framesize=.043, fs=12000):
 
     # Filter the sound
     filt = generate_filter('default', fs=fs)
-    filtSound = filter_audio(sound, filt)
+    filtSound = sound#filter_audio(sound, filt)
     prevPPE_1 = np.zeros(6)
     prevPPE_2 = np.zeros(6)
     ppe = np.zeros(6)
@@ -359,12 +376,12 @@ def pproc_calculate_pitch(sound, framesize=.043, fs=12000):
         # Get current PPE
         # TODO: Parallel?
         for j in range(6):
-            ppe[j] = peak_rundown(peaks[j], fs=fs)
+            ppe[j] = peak_rundown(peaks[j], t, fs=fs)
         # Create the ppe matrix
         peMatrix = create_pitch_matrix(ppe, prevPPE_1, prevPPE_2)
         # Find current best pitch estimate
         # NOTE: idk what idx into estimtes this is supposed to be?
-        estimates[i-updateSize] = calculate_ppe_winner(peMatrix) / 1000 # Convert from ms to seconds
+        estimates[i-updateSize] = calculate_ppe_winner(peMatrix)
         i += updateSize
 
     return estimates
