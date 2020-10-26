@@ -215,10 +215,12 @@ def test_pproc_full(filename, framesize=.043, fs=12000):
 #test_generate_filters()
 #test_filter_audio()
 #test_find_peaks()
-test_all("PureTones/100Hz.wav", frameSize=.1)
+#test_all("PureTones/100Hz.wav", frameSize=.2)
 #test_all("PureTones/100Hz.wav")
-#test_pproc_full("PureTones/100Hz.wav", framesize=.1)
-test_pproc_full("Recordings/1_AF1.wav", framesize=.032)
+#test_pproc_full("PureTones/100Hz.wav", framesize=.05)
+for i in range(1,9):
+    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.032)
+
 
 
 

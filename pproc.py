@@ -15,6 +15,7 @@ def generate_filter(filterType, fs=12000):
     # TODO: add different filter types
     #   Try something like signal.firfilt or signal.remez
     # TODO: test numtaps, possibly have it as arg into generate filter
+    # NOTE: A better filter is NECESSARY
     '''
     numtaps = 53
     bands = [0, 100, 800, 900, 1000, fs/2]
@@ -168,6 +169,7 @@ def peak_rundown(m, t, fs=12000):
         m -> np.array of pulse train
     return:
         Pav -> smoothed period estimate
+        NOTE: I think paper uses everything in ms?
     '''
     m = m[2:len(m)]
     Pav_prev = 0
@@ -194,7 +196,10 @@ def peak_rundown(m, t, fs=12000):
                 Pnew = t[i] - t[lastPeak]#(i - lastPeak)/fs
                 #print("i: {} FreqNew: {}".format(i, 1/Pnew))
                 temp = Pav
-                Pav = (Pav_prev + Pnew)/2
+                if Pav_prev == 0:
+                    Pav = Pnew
+                else:
+                    Pav = (Pav_prev + Pnew)/2
                 #print(Pav_prev)
                 #print(1/Pav)
                 Pav_prev = temp
@@ -339,12 +344,17 @@ def calculate_ppe_winner(peMatrix):
     return:
         winner -> ppe (in ms) that best estimates the current pitch period
     '''
-    winnerArr = np.zeros((6,2))
+    winnerArr = np.zeros((4,2))
     biases = [1,2,5,7]
     for i in range(4):
         winnerArr[i] = calculate_coincidence(peMatrix, biases[i])
-    winner = peMatrix[0][np.argmax(winnerArr, axis=0)[1]]
-
+    winnerIdx = np.argmax(winnerArr, axis=0)[1]
+    winner = peMatrix[0][winnerIdx]
+    # If abs(coincidences# - threshold or bias(?)) < 0 -> unvoiced
+    coincidenceNum = winnerArr[winnerIdx][1]
+    #print(coincidenceNum)
+    if coincidenceNum - 24 < 0:
+        winner = 0 
     return winner
 
 def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
@@ -359,7 +369,7 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
 
     # Filter the sound
     filt = generate_filter('default', fs=fs)
-    filtSound = sound#filter_audio(sound, filt)
+    filtSound = filter_audio(sound, filt)
     prevPPE_1 = np.zeros(6)
     prevPPE_2 = np.zeros(6)
     ppe = np.zeros(6)
