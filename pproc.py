@@ -342,7 +342,7 @@ def calculate_coincidence(peMatrix, bias):
                 #print("curPPE: {} compPPE: {}".format(1/peMatrix[0][i],1/peMatrix[y][x]))
                 if np.abs(peMatrix[0][i] - peMatrix[y][x]) <= threshold: #and (0 != y and x != i):
                     #print("Threshold: {}".format(threshold))
-                #if np.abs(peMatrix[0][i] - peMatrix[y][x])/peMatrix[0][i] >= threshold and (0 != y and x != i):
+                #if np.abs(peMatrix[0][i] - peMatrix[y][x])/peMatrix[0][i] < threshold and (0 != y and x != i):
                     coincidences[i] += 1
 
     winnerIdx = np.argmax(coincidences)
@@ -351,9 +351,9 @@ def calculate_coincidence(peMatrix, bias):
     winnerVal = coincidences[winnerIdx] 
     #print(winnerVal)
     #print("PPEs: {}\n#ofCoincidences: {}".format(1/peMatrix[0][:], coincidences))
-    return [winnerIdx, winnerVal]#[(winnerIdx, winnerVal), bias]
+    return [winnerIdx, winnerVal, bias]#[(winnerIdx, winnerVal), bias]
 
-def calculate_ppe_winner(peMatrix):
+def calculate_ppe_winner(peMatrix, prevWinner):
     '''
     Find the current ppe with the most coincidences in the peMatrix
     TODO: Can be done in parallel for each bias
@@ -364,9 +364,9 @@ def calculate_ppe_winner(peMatrix):
     winnerArrIdx = np.zeros(4)
     winnerArrCoin = np.zeros(4)
     biases = [1,2,5,7]
-    #thresh = np.zeros(4)
+    thresh = np.zeros(4)
     for i in range(4):
-        winnerArrIdx[i], winnerArrCoin[i] = calculate_coincidence(peMatrix, biases[i])
+        winnerArrIdx[i], winnerArrCoin[i], thresh[i] = calculate_coincidence(peMatrix, biases[i])
         #winnerArr[i], thresh[i] = calculate_coincidence(peMatrix, biases[i])
     '''
     winnerIdx = np.argmax(winnerArr, axis=0)[1]
@@ -382,12 +382,16 @@ def calculate_ppe_winner(peMatrix):
     #Temp
     winnerIdx = np.argmax(winnerArrCoin)
     winner = peMatrix[0][int(winnerArrIdx[winnerIdx])]
-    #print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
+    print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
+    #print(thresh[winnerIdx])
+    #print(winnerArrCoin[winnerIdx] - thresh[winnerIdx])
+    #print(winnerArrCoin[winnerIdx])
     #print(peMatrix[0][np.array(winnerArrIdx[:], dtype=np.int)])
     #print(winnerArrIdx)
     #print(1/winner)
     #print(1/(peMatrix[0][:]))
-    if winnerArrCoin[winnerIdx] < 0 or winner == 1:
+    #if (winnerArrCoin[winnerIdx] - 4 < 0 or np.abs(1/prevWinner-1/winner) < 200) or winner == 1:
+    if winnerArrCoin[winnerIdx] - 0 < 0  or winner == 1:
         winner = 0
     return winner
 
@@ -407,16 +411,24 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
     prevPPE_1 = np.zeros(6)
     prevPPE_2 = np.zeros(6)
     ppe = np.zeros(6)
+    prevWinner = 1
     
     # Convert framesize to samples
     updateSize = round(fs * framesize)
     i = updateSize
     while i < len(sound):
+        windowedFrame = filtSound[i-updateSize:i]*np.hamming(len(filtSound[i-updateSize:i]))
+        # LAB 4: V/U detection
+        energy = np.sum(np.square(np.abs(filtSound[i-updateSize:i])))
+        if energy < .35:
+            i += updateSize
+            print(energy)
+            continue
         # Make peak measurements
         #print(len(filtSound[i-updateSize:i]))
         # NOTE: ok so hanning window is amazing... 
         # TODO: test different windows?
-        peaks = find_peaks(filtSound[i-updateSize:i]*np.hanning(len(filtSound[i-updateSize:i])))
+        peaks = find_peaks(windowedFrame)
         # Update previous PPEs
         prevPPE_2 = prevPPE_1
         prevPPE_1 = ppe
@@ -431,7 +443,8 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
         #print(1/peMatrix[0][:])
         # Find current best pitch estimate
         # NOTE: idk what idx into estimtes this is supposed to be?
-        estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix)
+        estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix, prevWinner)
+        prevWinner = estimates[(2*i-updateSize)//2]
         i += updateSize
 
     return estimates

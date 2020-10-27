@@ -4,6 +4,7 @@ import parselmouth
 from matplotlib import pyplot as plt
 import scipy.signal as signal
 import numpy as np
+from scipy.io.wavfile import read, write
 
 def plot_spectrogram(title, w, fs=12000):
     ff, tt, Sxx = signal.spectrogram(w, fs=fs)
@@ -206,7 +207,8 @@ def test_all(filename, fs=12000, frameSize=None):
 def test_pproc_full(filename, framesize=.043, fs=12000):
     sound = parselmouth.Sound(filename)
     soundMono = np.array(sound.convert_to_mono()).flatten()
-    #pitches = pproc.pproc_calculate_pitch(soundMono[0:3000], sound.xs()[0:3000], framesize=framesize, fs=fs)
+    #rate,soundMono = read(filename)
+    #pitches = pproc.pproc_calculate_pitch(soundMono[0:6000], sound.xs()[0:6000], framesize=framesize, fs=fs)
     pitches = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, fs=fs)
     #print(len(np.nonzero(pitches)))
     t = np.array(np.nonzero(pitches)).flatten()
