@@ -60,6 +60,12 @@ def simple_peaks_helper(sound):
     # NOTE: Changed to xxx_equal to get rid of errors in unit test
     m1 = signal.argrelextrema(sound, np.greater_equal)
     m4 = signal.argrelextrema(sound, np.less_equal)
+    '''
+    if(len(m1) > 1):
+        m1 = m1[2:len(m1)]
+    if(len(m4) > 1):
+        m4 = m4[2:len(m4)]
+    '''
     return [m1, m4]
 
 def peak_valley_helper(m1, m4):
@@ -76,7 +82,7 @@ def peak_valley_helper(m1, m4):
     m4NonZeroIdx = np.array(np.nonzero(m4)).flatten()
     # TODO: Test all cases
     # First peak before first valley
-    if(m1NonZeroIdx[0] < m4NonZeroIdx[0]):
+    if(len(m4NonZeroIdx) > 0 and m1NonZeroIdx[0] < m4NonZeroIdx[0]):
         m2[m1NonZeroIdx[0]] = m1[m1NonZeroIdx[0]]
         m5[m4NonZeroIdx[0]] = np.abs(m1[m1NonZeroIdx[0]]) - np.abs(m4[m4NonZeroIdx[0]])
         for i in range(1, len(m1NonZeroIdx)):
@@ -86,7 +92,7 @@ def peak_valley_helper(m1, m4):
             if i < len(m4NonZeroIdx):
                 m5[m4NonZeroIdx[i]] = np.abs(m1[m1NonZeroIdx[i]]) - np.abs(m4[m4NonZeroIdx[i]])
     # First peak after first valley
-    else:
+    elif(len(m1NonZeroIdx) > 0):
         m5[m4NonZeroIdx[0]] = m4[m4NonZeroIdx[0]]
         for i in range(len(m1NonZeroIdx)):
             if i < len(m4NonZeroIdx):
@@ -171,7 +177,7 @@ def peak_rundown(m, t, fs=12000):
         Pav -> smoothed period estimate
         NOTE: I think paper uses everything in ms?
     '''
-    m = m[2:len(m)]
+    #m = m[2:len(m)]
     Pav_prev = 0
     Pnew = 0
     # Find first peak (excluding first sample)
@@ -199,9 +205,7 @@ def peak_rundown(m, t, fs=12000):
                 if Pav_prev == 0:
                     Pav = Pnew
                 else:
-                    Pav = (Pav_prev + Pnew)/2
-                #print(Pav_prev)
-                #print(1/Pav)
+                    Pav = (Pav_prev + Pnew)/2 #min(max((Pav_prev + Pnew)/2, 4/1000), 10/1000)#
                 Pav_prev = temp
                 lastPeak = i
                 tau = .4*min(max(Pav, 4/1000), 10/1000) #Pav
@@ -252,11 +256,14 @@ def findThreshold(ppe, bias):
         threshold -> int of threshold length in ms
             inf if the ppe or bias are invalid
     '''
+    activeUnits = 1000 # ms to s
+    ppe *= activeUnits
+    #print(ppe)
     # Invalid ppe checks
     if ppe < 1.6:
-        threshold = np.inf
+        threshold = -np.inf
     elif ppe >= 25.5:
-        threshold = np.inf
+        threshold = -np.inf
     # Find given valid ppe and bias
     elif 1.6 <= ppe < 3.1:
         if bias == 1:
@@ -268,7 +275,7 @@ def findThreshold(ppe, bias):
         elif bias == 7:
             threshold = 400
         else:
-            threshold = np.inf
+            threshold = -np.inf
     elif 3.1 <= ppe < 6.3:
         if bias == 1:
             threshold = 200
@@ -279,7 +286,7 @@ def findThreshold(ppe, bias):
         elif bias == 7:
             threshold = 800
         else:
-            threshold = np.inf
+            threshold = -np.inf
     elif 6.3 <= ppe < 12.7:
         if bias == 1:
             threshold = 400
@@ -290,7 +297,7 @@ def findThreshold(ppe, bias):
         elif bias == 7:
             threshold = 1600
         else:
-            threshold = np.inf
+            threshold = -np.inf
     else: # 12.7 <= ppe < 25.5
         if bias == 1:
             threshold = 800
@@ -301,7 +308,11 @@ def findThreshold(ppe, bias):
         elif bias == 7:
             threshold = 3200
         else:
-            threshold = np.inf
+            threshold = -np.inf
+
+    if threshold > 0:
+        threshold /= activeUnits*1000
+#print(threshold)
 
     return threshold
 
@@ -311,7 +322,8 @@ def calculate_coincidence(peMatrix, bias):
         We estimate coincidence between two pitch periods by finding the absolute difference between them and 
         if it is less then the coincidence window length we say it coincides.
     NOTE: Can be done in parallel for each bias
-    NOTE: probably a better way to check thresholds and make threshold matrix (possibly custom class)
+    NOTE: PeMatrix is in secs now so threshold must accomodate
+    NOTE: Tiebreaker is never specified ):<
     return:
         [winnerIdx, winnerVal]
             winnerIdx -> index into peMatrix[0] for ppe with most coincidences
@@ -327,15 +339,19 @@ def calculate_coincidence(peMatrix, bias):
         for x in range(6):
             for y in range(6):
                 # NOTE: we are checking when peMatrix[0][i] == peMatrix[y][x] but that shouldn't matter
-                if np.abs(peMatrix[0][i] - peMatrix[y][x]) < threshold and (0 != y and x != i):
+                #print("curPPE: {} compPPE: {}".format(1/peMatrix[0][i],1/peMatrix[y][x]))
+                if np.abs(peMatrix[0][i] - peMatrix[y][x]) <= threshold: #and (0 != y and x != i):
+                    #print("Threshold: {}".format(threshold))
                 #if np.abs(peMatrix[0][i] - peMatrix[y][x])/peMatrix[0][i] >= threshold and (0 != y and x != i):
                     coincidences[i] += 1
 
     winnerIdx = np.argmax(coincidences)
     #print(1/peMatrix[0][:])
     #print(coincidences)
-    winnerVal = coincidences[winnerIdx]
-    return (winnerIdx, winnerVal)
+    winnerVal = coincidences[winnerIdx] 
+    #print(winnerVal)
+    #print("PPEs: {}\n#ofCoincidences: {}".format(1/peMatrix[0][:], coincidences))
+    return [winnerIdx, winnerVal]#[(winnerIdx, winnerVal), bias]
 
 def calculate_ppe_winner(peMatrix):
     '''
@@ -344,17 +360,35 @@ def calculate_ppe_winner(peMatrix):
     return:
         winner -> ppe (in ms) that best estimates the current pitch period
     '''
-    winnerArr = np.zeros((4,2))
+    #winnerArr = np.zeros((4,2))
+    winnerArrIdx = np.zeros(4)
+    winnerArrCoin = np.zeros(4)
     biases = [1,2,5,7]
+    #thresh = np.zeros(4)
     for i in range(4):
-        winnerArr[i] = calculate_coincidence(peMatrix, biases[i])
+        winnerArrIdx[i], winnerArrCoin[i] = calculate_coincidence(peMatrix, biases[i])
+        #winnerArr[i], thresh[i] = calculate_coincidence(peMatrix, biases[i])
+    '''
     winnerIdx = np.argmax(winnerArr, axis=0)[1]
     winner = peMatrix[0][winnerIdx]
-    # If abs(coincidences# - threshold or bias(?)) < 0 -> unvoiced
+    # If coincidences# - threshold or bias(?) < 0 -> unvoiced
     coincidenceNum = winnerArr[winnerIdx][1]
-    #print(coincidenceNum)
-    if coincidenceNum - 24 < 0:
+    #print("Coincidence #s: {} Winner Array: {}".format(winnerArr[:][1], 1/peMatrix[0][winnerArr[:][0]]))
+    print(list(winnerArr)[0][:])
+    #if coincidenceNum - thresh[winnerIdx] < 0 or winner == 1:
+    if coincidenceNum < 0 or winner == 1:
         winner = 0 
+    '''
+    #Temp
+    winnerIdx = np.argmax(winnerArrCoin)
+    winner = peMatrix[0][int(winnerArrIdx[winnerIdx])]
+    #print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
+    #print(peMatrix[0][np.array(winnerArrIdx[:], dtype=np.int)])
+    #print(winnerArrIdx)
+    #print(1/winner)
+    #print(1/(peMatrix[0][:]))
+    if winnerArrCoin[winnerIdx] < 0 or winner == 1:
+        winner = 0
     return winner
 
 def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
@@ -379,7 +413,10 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
     i = updateSize
     while i < len(sound):
         # Make peak measurements
-        peaks = find_peaks(filtSound[i-updateSize:i])
+        #print(len(filtSound[i-updateSize:i]))
+        # NOTE: ok so hanning window is amazing... 
+        # TODO: test different windows?
+        peaks = find_peaks(filtSound[i-updateSize:i]*np.hanning(len(filtSound[i-updateSize:i])))
         # Update previous PPEs
         prevPPE_2 = prevPPE_1
         prevPPE_1 = ppe
@@ -387,11 +424,14 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
         # TODO: Parallel?
         for j in range(6):
             ppe[j] = peak_rundown(peaks[j], t, fs=fs)
+        if prevPPE_2.all() == 0:
+            continue
         # Create the ppe matrix
         peMatrix = create_pitch_matrix(ppe, prevPPE_1, prevPPE_2)
+        #print(1/peMatrix[0][:])
         # Find current best pitch estimate
         # NOTE: idk what idx into estimtes this is supposed to be?
-        estimates[i-updateSize] = calculate_ppe_winner(peMatrix)
+        estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix)
         i += updateSize
 
     return estimates

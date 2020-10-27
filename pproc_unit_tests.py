@@ -7,6 +7,7 @@ import numpy as np
 
 def plot_spectrogram(title, w, fs=12000):
     ff, tt, Sxx = signal.spectrogram(w, fs=fs)
+    plt.figure()
     plt.pcolormesh(tt, ff, Sxx, cmap='viridis')#, shading='gouraud')
     plt.title(title)
     plt.xlabel('t (sec)')
@@ -205,11 +206,44 @@ def test_all(filename, fs=12000, frameSize=None):
 def test_pproc_full(filename, framesize=.043, fs=12000):
     sound = parselmouth.Sound(filename)
     soundMono = np.array(sound.convert_to_mono()).flatten()
+    #pitches = pproc.pproc_calculate_pitch(soundMono[0:3000], sound.xs()[0:3000], framesize=framesize, fs=fs)
     pitches = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, fs=fs)
     #print(len(np.nonzero(pitches)))
     t = np.array(np.nonzero(pitches)).flatten()
     print(1/pitches[t])
     pitch_parselmouth.compute_pitch_praat(filename, 1/pitches[t], computed_pitch_xs=t/fs)
+    return
+
+def test_gen_sin(freq, length, silenceLength=0, noiseRat=0, framesize=.043, fs=12000):
+    '''
+    Test with numpy sine wave
+    freq -> Hz
+    length -> sec
+    '''
+    t = np.arange(0, int(length*fs)) / fs
+    tSilence = np.arange(t[-1], t[-1]+int(silenceLength*fs)) / fs
+    tFull = np.append(t, tSilence)
+    sound = np.sin(2*np.pi*freq*t) 
+    sound = np.append(sound, np.zeros(len(tSilence))) + noiseRat*np.random.normal(0,1,len(tFull))
+    pitches = pproc.pproc_calculate_pitch(sound, tFull, framesize=framesize, fs=fs)
+    tnz = np.array(np.nonzero(pitches)).flatten()
+    calcFreqAvg = np.sum(1/pitches[tnz])/len(tnz)
+    print(1/pitches[tnz])
+    print("Calculated Frquency Average: {}\n Actual Frequency: {}\n Difference: {}".format(calcFreqAvg, freq, freq-calcFreqAvg))
+
+    filt = pproc.generate_filter('default')
+    filtSound = pproc.filter_audio(sound, filt)
+
+    plt.figure()
+    plt.plot(tFull[0:3000], filtSound[0:3000])
+    plt.title("Original Signal")
+    plt.show()
+    
+    plot_spectrogram("Filtered Sine", filtSound)
+    plt.plot(tFull[tnz], 1/pitches[tnz], 'ro')
+    plt.xlim([0,length+silenceLength])
+    plt.ylim([0,1200])
+    plt.show()
     return
 
 #test_generate_filters()
@@ -219,7 +253,9 @@ def test_pproc_full(filename, framesize=.043, fs=12000):
 #test_all("PureTones/100Hz.wav")
 #test_pproc_full("PureTones/100Hz.wav", framesize=.05)
 for i in range(1,9):
-    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.032)
+    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.043)
+
+#test_gen_sin(200, 1.5, silenceLength=.25, noiseRat=0.05)
 
 
 
