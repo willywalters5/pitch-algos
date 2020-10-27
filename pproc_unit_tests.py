@@ -272,7 +272,7 @@ def error_test(framesize=.042):
 
         sound = parselmouth.Sound("Recordings/{}_AM2.wav".format(i))
         soundMono = np.array(sound.convert_to_mono()).flatten()
-        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=0.0175)
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=0.0165)
         pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AM2.wav".format(i), 'PPROC', pTof(pitch), True)
         total_len = min(len(pitch),len(pitch_praat))
         pitches.append(pTof(pitch[:total_len]))
@@ -282,7 +282,7 @@ def error_test(framesize=.042):
 
         sound = parselmouth.Sound("Recordings/{}_AF1.wav".format(i))
         soundMono = np.array(sound.convert_to_mono()).flatten()
-        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize)
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=.28)
         pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AF1.wav".format(i), 'PPROC', pTof(pitch), True)
         total_len = min(len(pitch),len(pitch_praat))
         pitches.append(pTof(pitch[:total_len]))
