@@ -60,12 +60,12 @@ def simple_peaks_helper(sound):
     # NOTE: Changed to xxx_equal to get rid of errors in unit test
     m1 = signal.argrelextrema(sound, np.greater_equal)
     m4 = signal.argrelextrema(sound, np.less_equal)
-    '''
+    
     if(len(m1) > 1):
         m1 = m1[2:len(m1)]
     if(len(m4) > 1):
         m4 = m4[2:len(m4)]
-    '''
+    
     return [m1, m4]
 
 def peak_valley_helper(m1, m4):
@@ -189,12 +189,12 @@ def peak_rundown(m, t, fs=12000):
         start = len(m)
     lastPeak = start
     Pav = 0#4/1000
-    beta = ((4/1000)/.695)
+    beta = ((16/1000)/.695)
     #print(start)
     #print(len(m))
     #print(np.array(np.nonzero(m)).flatten())
     # Start blanking
-    tau = .4*(4/1000)
+    tau = .4*(16/1000)
     for i in range(start, len(m)):
         if tau <= 0:
             # Start exponential decay, if peak exceeds exponential decay update period and restart blanking

@@ -1,198 +1,198 @@
 Current wav file: Recordings/1_AM1.wav
-Gross Error Count: 4/5
-Mean of the Fine Pitch Errors:  2.1133814426746227
-Standard Deviation of the Fine Pitch Errors:  0.0
+Gross Error Count: 1/5
+Mean of the Fine Pitch Errors:  1.7334950320643188
+Standard Deviation of the Fine Pitch Errors:  0.9603450477107291
 Voiced-to-Unvoiced Error Rate:  0.4444444444444444
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/1_AM2.wav
-Gross Error Count: 7/12
-Mean of the Fine Pitch Errors:  1.8167764299145575
-Standard Deviation of the Fine Pitch Errors:  1.4285497054279235
+Gross Error Count: 3/12
+Mean of the Fine Pitch Errors:  3.4652045179340294
+Standard Deviation of the Fine Pitch Errors:  2.0250732432312906
 Voiced-to-Unvoiced Error Rate:  0.29411764705882354
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/1_AF1.wav
-Gross Error Count: 6/8
-Mean of the Fine Pitch Errors:  4.206221528598007
-Standard Deviation of the Fine Pitch Errors:  1.443204319512801
+Gross Error Count: 4/8
+Mean of the Fine Pitch Errors:  3.0279486768193706
+Standard Deviation of the Fine Pitch Errors:  1.571671163220755
 Voiced-to-Unvoiced Error Rate:  0.1111111111111111
 Unviced-to-voiced Error Rate:  0.09090909090909091
 
 
 Current wav file: Recordings/2_AM1.wav
-Gross Error Count: 1/6
-Mean of the Fine Pitch Errors:  3.752531061138427
-Standard Deviation of the Fine Pitch Errors:  1.9434359001859247
+Gross Error Count: 0/6
+Mean of the Fine Pitch Errors:  4.47023334007238
+Standard Deviation of the Fine Pitch Errors:  2.392265743539206
 Voiced-to-Unvoiced Error Rate:  0.14285714285714285
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/2_AM2.wav
-Gross Error Count: 6/13
-Mean of the Fine Pitch Errors:  3.977721481910495
-Standard Deviation of the Fine Pitch Errors:  2.8200565274858835
+Gross Error Count: 10/13
+Mean of the Fine Pitch Errors:  5.558722957808707
+Standard Deviation of the Fine Pitch Errors:  2.5164136961829917
 Voiced-to-Unvoiced Error Rate:  0.07142857142857142
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/2_AF1.wav
-Gross Error Count: 2/7
-Mean of the Fine Pitch Errors:  5.2997718475831785
-Standard Deviation of the Fine Pitch Errors:  2.189766080423151
+Gross Error Count: 5/7
+Mean of the Fine Pitch Errors:  8.076604843612714
+Standard Deviation of the Fine Pitch Errors:  2.5889184674422707
 Voiced-to-Unvoiced Error Rate:  0.125
 Unviced-to-voiced Error Rate:  0.1
 
 
 Current wav file: Recordings/3_AM1.wav
-Gross Error Count: 6/7
-Mean of the Fine Pitch Errors:  0.09173939120917396
-Standard Deviation of the Fine Pitch Errors:  0.0
+Gross Error Count: 4/7
+Mean of the Fine Pitch Errors:  3.1216727914590905
+Standard Deviation of the Fine Pitch Errors:  0.8479222841194393
 Voiced-to-Unvoiced Error Rate:  0.125
 Unviced-to-voiced Error Rate:  0.08333333333333333
 
 
 Current wav file: Recordings/3_AM2.wav
-Gross Error Count: 5/8
-Mean of the Fine Pitch Errors:  5.373068328125991
-Standard Deviation of the Fine Pitch Errors:  3.5666228336863885
+Gross Error Count: 4/8
+Mean of the Fine Pitch Errors:  6.924544890669534
+Standard Deviation of the Fine Pitch Errors:  2.714625059748951
 Voiced-to-Unvoiced Error Rate:  0.5
 Unviced-to-voiced Error Rate:  0.5
 
 
 Current wav file: Recordings/3_AF1.wav
 Gross Error Count: 1/3
-Mean of the Fine Pitch Errors:  11.66719695088247
-Standard Deviation of the Fine Pitch Errors:  0.00907497109028634
+Mean of the Fine Pitch Errors:  8.50218966369404
+Standard Deviation of the Fine Pitch Errors:  0.8844717243055308
 Voiced-to-Unvoiced Error Rate:  0.25
 Unviced-to-voiced Error Rate:  0.09523809523809523
 
 
 Current wav file: Recordings/4_AM1.wav
-Gross Error Count: 5/7
-Mean of the Fine Pitch Errors:  2.8650416322799686
-Standard Deviation of the Fine Pitch Errors:  2.368186408776765
+Gross Error Count: 1/7
+Mean of the Fine Pitch Errors:  3.2725843096169243
+Standard Deviation of the Fine Pitch Errors:  2.0994046316958803
 Voiced-to-Unvoiced Error Rate:  0.0
 Unviced-to-voiced Error Rate:  0.07692307692307693
 
 
 Current wav file: Recordings/4_AM2.wav
-Gross Error Count: 6/13
-Mean of the Fine Pitch Errors:  2.933809429132355
-Standard Deviation of the Fine Pitch Errors:  2.67302408027217
+Gross Error Count: 8/13
+Mean of the Fine Pitch Errors:  3.7124093714568915
+Standard Deviation of the Fine Pitch Errors:  2.501845373813459
 Voiced-to-Unvoiced Error Rate:  0.13333333333333333
 Unviced-to-voiced Error Rate:  0
 
 
 Current wav file: Recordings/4_AF1.wav
-Gross Error Count: 4/11
-Mean of the Fine Pitch Errors:  2.809698877290852
-Standard Deviation of the Fine Pitch Errors:  3.3134978122399894
+Gross Error Count: 5/11
+Mean of the Fine Pitch Errors:  1.4839605542399663
+Standard Deviation of the Fine Pitch Errors:  1.0449343064423773
 Voiced-to-Unvoiced Error Rate:  0.08333333333333333
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/5_AM1.wav
-Gross Error Count: 18/30
-Mean of the Fine Pitch Errors:  4.271924183746477
-Standard Deviation of the Fine Pitch Errors:  2.897910255322207
+Gross Error Count: 8/30
+Mean of the Fine Pitch Errors:  4.270107008451872
+Standard Deviation of the Fine Pitch Errors:  3.3639357102600416
 Voiced-to-Unvoiced Error Rate:  0.16666666666666666
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/5_AM2.wav
-Gross Error Count: 30/44
-Mean of the Fine Pitch Errors:  2.117402315318008
-Standard Deviation of the Fine Pitch Errors:  2.5450317609870297
+Gross Error Count: 13/44
+Mean of the Fine Pitch Errors:  2.812353442960396
+Standard Deviation of the Fine Pitch Errors:  2.755767476587541
 Voiced-to-Unvoiced Error Rate:  0.08333333333333333
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/5_AF1.wav
-Gross Error Count: 10/32
-Mean of the Fine Pitch Errors:  1.713402016533289
-Standard Deviation of the Fine Pitch Errors:  1.6997060731261735
+Gross Error Count: 26/32
+Mean of the Fine Pitch Errors:  2.176436844287494
+Standard Deviation of the Fine Pitch Errors:  2.753444683589148
 Voiced-to-Unvoiced Error Rate:  0.08571428571428572
 Unviced-to-voiced Error Rate:  0.36363636363636365
 
 
 Current wav file: Recordings/6_AM1.wav
-Gross Error Count: 16/30
-Mean of the Fine Pitch Errors:  3.8487199807878176
-Standard Deviation of the Fine Pitch Errors:  3.5545483308823336
+Gross Error Count: 10/30
+Mean of the Fine Pitch Errors:  3.065395118694557
+Standard Deviation of the Fine Pitch Errors:  3.366459234684104
 Voiced-to-Unvoiced Error Rate:  0.16666666666666666
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/6_AM2.wav
-Gross Error Count: 30/46
-Mean of the Fine Pitch Errors:  2.260926668752824
-Standard Deviation of the Fine Pitch Errors:  2.4070387127372026
+Gross Error Count: 18/46
+Mean of the Fine Pitch Errors:  3.795134882691026
+Standard Deviation of the Fine Pitch Errors:  3.557682217736375
 Voiced-to-Unvoiced Error Rate:  0.061224489795918366
 Unviced-to-voiced Error Rate:  0.4
 
 
 Current wav file: Recordings/6_AF1.wav
-Gross Error Count: 13/36
-Mean of the Fine Pitch Errors:  2.7203805935126235
-Standard Deviation of the Fine Pitch Errors:  2.1930441566774546
+Gross Error Count: 24/36
+Mean of the Fine Pitch Errors:  2.8349604727803928
+Standard Deviation of the Fine Pitch Errors:  2.1709318959308024
 Voiced-to-Unvoiced Error Rate:  0.05263157894736842
 Unviced-to-voiced Error Rate:  0.0
 
 
 Current wav file: Recordings/7_AM1.wav
-Gross Error Count: 11/29
-Mean of the Fine Pitch Errors:  2.555806837895059
-Standard Deviation of the Fine Pitch Errors:  2.9173888747653307
+Gross Error Count: 7/29
+Mean of the Fine Pitch Errors:  3.3119767620685097
+Standard Deviation of the Fine Pitch Errors:  3.6690928352500403
 Voiced-to-Unvoiced Error Rate:  0.14705882352941177
 Unviced-to-voiced Error Rate:  0.10526315789473684
 
 
 Current wav file: Recordings/7_AM2.wav
-Gross Error Count: 32/52
-Mean of the Fine Pitch Errors:  2.6686609684409226
-Standard Deviation of the Fine Pitch Errors:  3.032498063410986
+Gross Error Count: 24/52
+Mean of the Fine Pitch Errors:  2.324180182835479
+Standard Deviation of the Fine Pitch Errors:  3.027562728644748
 Voiced-to-Unvoiced Error Rate:  0.14754098360655737
 Unviced-to-voiced Error Rate:  0.2857142857142857
 
 
 Current wav file: Recordings/7_AF1.wav
-Gross Error Count: 20/34
-Mean of the Fine Pitch Errors:  1.8716894057662106
-Standard Deviation of the Fine Pitch Errors:  1.99752281424873
+Gross Error Count: 26/34
+Mean of the Fine Pitch Errors:  2.0463803872682824
+Standard Deviation of the Fine Pitch Errors:  1.8492456631668122
 Voiced-to-Unvoiced Error Rate:  0.08108108108108109
 Unviced-to-voiced Error Rate:  0.18518518518518517
 
 
 Current wav file: Recordings/8_AM1.wav
-Gross Error Count: 9/22
-Mean of the Fine Pitch Errors:  3.7622714851182315
-Standard Deviation of the Fine Pitch Errors:  3.316927555024756
+Gross Error Count: 7/22
+Mean of the Fine Pitch Errors:  4.559280140249752
+Standard Deviation of the Fine Pitch Errors:  3.829725596821359
 Voiced-to-Unvoiced Error Rate:  0.26666666666666666
 Unviced-to-voiced Error Rate:  0.13043478260869565
 
 
 Current wav file: Recordings/8_AM2.wav
-Gross Error Count: 34/48
-Mean of the Fine Pitch Errors:  1.9074923575363414
-Standard Deviation of the Fine Pitch Errors:  2.5212873776600437
+Gross Error Count: 26/48
+Mean of the Fine Pitch Errors:  4.3627367953043965
+Standard Deviation of the Fine Pitch Errors:  3.667174425976772
 Voiced-to-Unvoiced Error Rate:  0.1111111111111111
 Unviced-to-voiced Error Rate:  0.3333333333333333
 
 
 Current wav file: Recordings/8_AF1.wav
-Gross Error Count: 25/39
-Mean of the Fine Pitch Errors:  4.147983770086812
-Standard Deviation of the Fine Pitch Errors:  3.0485518939027876
+Gross Error Count: 24/39
+Mean of the Fine Pitch Errors:  3.459908998579929
+Standard Deviation of the Fine Pitch Errors:  2.2596674936852197
 Voiced-to-Unvoiced Error Rate:  0.11363636363636363
 Unviced-to-voiced Error Rate:  0.047619047619047616
 
 
 Average of five error measurements:
-Gross Error Count:  0.5553505535055351
-Mean of the Fine Pitch Errors:  3.3647341243431126
-Standard Deviation of the Fine Pitch Errors:  2.24528643782693
+Gross Error Count:  0.477859778597786
+Mean of the Fine Pitch Errors:  3.8486842494008364
+Standard Deviation of the Fine Pitch Errors:  2.4341075293244105
 Voiced-to-Unvoiced Error Rate:  0.13694267515923567
 Unviced-to-voiced Error Rate:  0.1111111111111111
