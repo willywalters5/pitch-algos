@@ -15,7 +15,7 @@ def generate_filter(filterType, fs=12000):
     # TODO: add different filter types
     #   Try something like signal.firfilt or signal.remez
     # TODO: test numtaps, possibly have it as arg into generate filter
-    # NOTE: A better filter is NECESSARY
+    # NOTE: A better filter might be good
     '''
     numtaps = 53
     bands = [0, 100, 800, 900, 1000, fs/2]
@@ -382,7 +382,7 @@ def calculate_ppe_winner(peMatrix, prevWinner):
     #Temp
     winnerIdx = np.argmax(winnerArrCoin)
     winner = peMatrix[0][int(winnerArrIdx[winnerIdx])]
-    print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
+    #print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
     #print(thresh[winnerIdx])
     #print(winnerArrCoin[winnerIdx] - thresh[winnerIdx])
     #print(winnerArrCoin[winnerIdx])
@@ -395,7 +395,7 @@ def calculate_ppe_winner(peMatrix, prevWinner):
         winner = 0
     return winner
 
-def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
+def pproc_calculate_pitch(sound, t, framesize=.042, fs=12000, ecutoff=.35):
     '''
     Combine the entire pproc algorith into one easy to use function
     TODO: What to do with potential leftover frames
@@ -403,7 +403,8 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
     return:
         estimates -> np.array of pitch estimates
     '''
-    estimates = np.zeros(sound.size)
+    #estimates = np.zeros(sound.size)
+    estimates = np.zeros(int((len(sound)/fs)/framesize))
 
     # Filter the sound
     filt = generate_filter('default', fs=fs)
@@ -416,13 +417,15 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
     # Convert framesize to samples
     updateSize = round(fs * framesize)
     i = updateSize
+    counter = 0
     while i < len(sound):
         windowedFrame = filtSound[i-updateSize:i]*np.hamming(len(filtSound[i-updateSize:i]))
         # LAB 4: V/U detection
         energy = np.sum(np.square(np.abs(filtSound[i-updateSize:i])))
-        if energy < .35:
+        if energy < ecutoff:
             i += updateSize
-            print(energy)
+            counter += 1
+            #print(energy)
             continue
         # Make peak measurements
         #print(len(filtSound[i-updateSize:i]))
@@ -443,8 +446,12 @@ def pproc_calculate_pitch(sound, t, framesize=.043, fs=12000):
         #print(1/peMatrix[0][:])
         # Find current best pitch estimate
         # NOTE: idk what idx into estimtes this is supposed to be?
-        estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix, prevWinner)
-        prevWinner = estimates[(2*i-updateSize)//2]
+        #estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix, prevWinner)
+        estimates[counter] = calculate_ppe_winner(peMatrix, prevWinner)
+        #print(estimates[counter])
+        #prevWinner = estimates[(2*i-updateSize)//2]
+        prevWinner = estimates[counter]
         i += updateSize
+        counter += 1
 
     return estimates

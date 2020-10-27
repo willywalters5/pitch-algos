@@ -14,7 +14,7 @@ def draw_spectrogram(spectrogram, dynamic_range=70):
     plt.xlabel("time [s]")
     plt.ylabel("frequency [Hz]")
 
-def draw_pitch_praat(pitch,computed_pitch=[]):
+def draw_pitch_praat(pitch,algName,computed_pitch=[]):
     # Extract selected pitch contour, and
     # replace unvoiced samples by NaN to not plot
     pitch_values = pitch.selected_array['frequency']
@@ -23,7 +23,7 @@ def draw_pitch_praat(pitch,computed_pitch=[]):
     #plt.plot(pitch.xs(), pitch_values, 'o', markersize=2)
     if len(computed_pitch)!=0:
         total_len=min(len(pitch),len(computed_pitch))
-        plt.plot(pitch.xs()[:total_len], computed_pitch[:total_len],'o',markersize=5,color="r",label="CEP")
+        plt.plot(pitch.xs()[:total_len], computed_pitch[:total_len],'o',markersize=5,color="r",label=algName)
         #plt.plot(pitch.xs(), computed_pitch, 'o', markersize=2)
 
     plt.grid(False)
@@ -31,7 +31,7 @@ def draw_pitch_praat(pitch,computed_pitch=[]):
     plt.legend(facecolor='white', framealpha=0.5)
     plt.ylabel("fundamental frequency [Hz]")
 
-def compute_pitch_praat(wav_file,computed_pitch=[],draw_pitch_contour=True):
+def compute_pitch_praat(wav_file,algName,computed_pitch=[],draw_pitch_contour=True):
     '''
     Return pitch contour generated from praat; Draw pitch contour overlaid with spectrogram given the wav file
     wav_file(str): wav file name
@@ -48,9 +48,9 @@ def compute_pitch_praat(wav_file,computed_pitch=[],draw_pitch_contour=True):
         plt.figure()
         draw_spectrogram(spectrogram)
         plt.twinx()
-        draw_pitch_praat(pitch,computed_pitch)
+        draw_pitch_praat(pitch,algName,computed_pitch)
         plt.xlim([snd.xmin, snd.xmax])
         #plt.show()
-        plt.savefig("CEP/{}.png".format(filename))
+        plt.savefig("{}/{}.png".format(algName,filename))
         plt.close()
     return pitch.selected_array['frequency']

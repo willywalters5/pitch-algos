@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import scipy.signal as signal
 import numpy as np
 from scipy.io.wavfile import read, write
+import Testing
 
 def plot_spectrogram(title, w, fs=12000):
     ff, tt, Sxx = signal.spectrogram(w, fs=fs)
@@ -204,7 +205,7 @@ def test_all(filename, fs=12000, frameSize=None):
 
     return
 
-def test_pproc_full(filename, framesize=.043, fs=12000):
+def test_pproc_full(filename, framesize=.042, fs=12000):
     sound = parselmouth.Sound(filename)
     soundMono = np.array(sound.convert_to_mono()).flatten()
     #rate,soundMono = read(filename)
@@ -216,7 +217,7 @@ def test_pproc_full(filename, framesize=.043, fs=12000):
     pitch_parselmouth.compute_pitch_praat(filename, 1/pitches[t], computed_pitch_xs=t/fs)
     return
 
-def test_gen_sin(freq, length, silenceLength=0, noiseRat=0, framesize=.043, fs=12000):
+def test_gen_sin(freq, length, silenceLength=0, noiseRat=0, framesize=.042, fs=12000):
     '''
     Test with numpy sine wave
     freq -> Hz
@@ -248,17 +249,60 @@ def test_gen_sin(freq, length, silenceLength=0, noiseRat=0, framesize=.043, fs=1
     plt.show()
     return
 
+def pTof(p, units=1):
+    f = np.zeros(len(p))
+    for i in range(len(p)):
+        if p[i] != 0:
+            f[i] = units/p[i]
+    return f
+
+def error_test(framesize=.042):
+    pitches=[]
+    pitches_praat=[]
+    for i in range(1,9):
+        sound = parselmouth.Sound("Recordings/{}_AM1.wav".format(i))
+        soundMono = np.array(sound.convert_to_mono()).flatten()
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize)
+        pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AM1.wav".format(i), 'PPROC', pTof(pitch), True)
+        total_len = min(len(pitch),len(pitch_praat))
+        pitches.append(pTof(pitch[:total_len]))
+        pitches_praat.append(pitch_praat[:total_len])
+        print("Current wav file: Recordings/{}_AM1.wav".format(i))
+        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+
+        sound = parselmouth.Sound("Recordings/{}_AM2.wav".format(i))
+        soundMono = np.array(sound.convert_to_mono()).flatten()
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=0.02)
+        pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AM2.wav".format(i), 'PPROC', pTof(pitch), True)
+        total_len = min(len(pitch),len(pitch_praat))
+        pitches.append(pTof(pitch[:total_len]))
+        pitches_praat.append(pitch_praat[:total_len])
+        print("Current wav file: Recordings/{}_AM2.wav".format(i))
+        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+
+        sound = parselmouth.Sound("Recordings/{}_AF1.wav".format(i))
+        soundMono = np.array(sound.convert_to_mono()).flatten()
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize)
+        pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AF1.wav".format(i), 'PPROC', pTof(pitch), True)
+        total_len = min(len(pitch),len(pitch_praat))
+        pitches.append(pTof(pitch[:total_len]))
+        pitches_praat.append(pitch_praat[:total_len])
+        print("Current wav file: Recordings/{}_AF1.wav".format(i))
+        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+
+    Testing.compute_errors_mean(pitches,pitches_praat,12000)
+    return
+    
 #test_generate_filters()
 #test_filter_audio()
 #test_find_peaks()
 #test_all("PureTones/100Hz.wav", frameSize=.2)
 #test_all("PureTones/100Hz.wav")
 #test_pproc_full("PureTones/100Hz.wav", framesize=.05)
-for i in range(1,9):
-    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.043)
+#for i in range(1,9):
+#    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.042)
 
 #test_gen_sin(200, 1.5, silenceLength=.25, noiseRat=0.05)
-
-
+error_test()
 
 
