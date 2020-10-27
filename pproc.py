@@ -22,9 +22,9 @@ def generate_filter(filterType, fs=12000):
     gain = [1, 1, 1, 0, 0, 0]
     myFilter = signal.firls(numtaps, bands, gain, fs=fs)
     '''
-    cutoff = 900
-    trans_width = 100  # Width of transition from pass band to stop band, Hz
-    numtaps = 300      # Size of the FIR filter.
+    cutoff = 600
+    trans_width = 250  # Width of transition from pass band to stop band, Hz
+    numtaps = 100 #300      # Size of the FIR filter.
     myFilter = signal.remez(numtaps, [0, cutoff, cutoff + trans_width, 0.5*fs], [1, 0], Hz=fs)
     
     return myFilter
@@ -205,7 +205,7 @@ def peak_rundown(m, t, fs=12000):
                 if Pav_prev == 0:
                     Pav = Pnew
                 else:
-                    Pav = (Pav_prev + Pnew)/2 #min(max((Pav_prev + Pnew)/2, 4/1000), 10/1000)#
+                    Pav =  min(max((Pav_prev + Pnew)/2, .003), .016) #(Pav_prev + Pnew)/2
                 Pav_prev = temp
                 lastPeak = i
                 tau = .4*min(max(Pav, 4/1000), 10/1000) #Pav
@@ -419,10 +419,11 @@ def pproc_calculate_pitch(sound, t, framesize=.042, fs=12000, ecutoff=.35):
     i = updateSize
     counter = 0
     while i < len(sound):
+        # TODO: Would overlap add make this better?
         windowedFrame = filtSound[i-updateSize:i]*np.hamming(len(filtSound[i-updateSize:i]))
         # LAB 4: V/U detection
         energy = np.sum(np.square(np.abs(filtSound[i-updateSize:i])))
-        if energy < ecutoff:
+        if energy < ecutoff -.005:
             i += updateSize
             counter += 1
             #print(energy)

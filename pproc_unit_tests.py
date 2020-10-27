@@ -268,17 +268,17 @@ def error_test(framesize=.042):
         pitches.append(pTof(pitch[:total_len]))
         pitches_praat.append(pitch_praat[:total_len])
         print("Current wav file: Recordings/{}_AM1.wav".format(i))
-        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+        Testing.compute_errors(pTof(pitch[:total_len]),pitch_praat[:total_len],12000,True)
 
         sound = parselmouth.Sound("Recordings/{}_AM2.wav".format(i))
         soundMono = np.array(sound.convert_to_mono()).flatten()
-        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=0.02)
+        pitch = pproc.pproc_calculate_pitch(soundMono, sound.xs(), framesize=framesize, ecutoff=0.0175)
         pitch_praat = pitch_parselmouth.compute_pitch_praat("Recordings/{}_AM2.wav".format(i), 'PPROC', pTof(pitch), True)
         total_len = min(len(pitch),len(pitch_praat))
         pitches.append(pTof(pitch[:total_len]))
         pitches_praat.append(pitch_praat[:total_len])
         print("Current wav file: Recordings/{}_AM2.wav".format(i))
-        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+        Testing.compute_errors(pTof(pitch[:total_len]),pitch_praat[:total_len],12000,True)
 
         sound = parselmouth.Sound("Recordings/{}_AF1.wav".format(i))
         soundMono = np.array(sound.convert_to_mono()).flatten()
@@ -288,12 +288,12 @@ def error_test(framesize=.042):
         pitches.append(pTof(pitch[:total_len]))
         pitches_praat.append(pitch_praat[:total_len])
         print("Current wav file: Recordings/{}_AF1.wav".format(i))
-        Testing.compute_errors(pitch[:total_len],pitch_praat[:total_len],12000,True)
+        Testing.compute_errors(pTof(pitch[:total_len]),pitch_praat[:total_len],12000,True)
 
     Testing.compute_errors_mean(pitches,pitches_praat,12000)
     return
     
-#test_generate_filters()
+test_generate_filters()
 #test_filter_audio()
 #test_find_peaks()
 #test_all("PureTones/100Hz.wav", frameSize=.2)
