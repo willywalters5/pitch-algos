@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import scipy.signal as signal
 import numpy as np
 from scipy.io.wavfile import read, write
+import time
 import Testing
 
 def plot_spectrogram(title, w, fs=12000):
@@ -292,8 +293,16 @@ def error_test(framesize=.042):
 
     Testing.compute_errors_mean(pitches,pitches_praat,12000)
     return
+
+def time_test():
+    # TODO: don't time the error tests
+    start_time = time.time()
+    error_test()
+    duration = (time.time() - start_time)/(8*3)
+    print("Average duration for each pitch calculation {} seconds".format(duration))
+    return
     
-test_generate_filters()
+#test_generate_filters()
 #test_filter_audio()
 #test_find_peaks()
 #test_all("PureTones/100Hz.wav", frameSize=.2)
@@ -303,6 +312,6 @@ test_generate_filters()
 #    test_pproc_full("Recordings/{}_AF1.wav".format(i), framesize=.042)
 
 #test_gen_sin(200, 1.5, silenceLength=.25, noiseRat=0.05)
-error_test()
-
+#error_test()
+time_test()
 

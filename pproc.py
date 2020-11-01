@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.signal as signal
+import multiprocessing
+from functools import partial
 
 #TODO: voice/unvoiced detection and silence detector/threshold
 
@@ -15,7 +17,6 @@ def generate_filter(filterType, fs=12000):
     # TODO: add different filter types
     #   Try something like signal.firfilt or signal.remez
     # TODO: test numtaps, possibly have it as arg into generate filter
-    # NOTE: A better filter might be good
     '''
     numtaps = 53
     bands = [0, 100, 800, 900, 1000, fs/2]
@@ -39,7 +40,7 @@ def filter_audio(sound, mFilter):
     # TODO: test application methods? 
     #       Implement without buit-ins
     #           Implement with circular convolution
-    #       Wil this work with all filter types?
+    #       Will this work with all filter types?
     filteredSound = signal.lfilter(mFilter, 1, sound)
     #filteredSound = np.zeros(sound.shape)
     #print(sound.shape)
@@ -73,7 +74,7 @@ def peak_valley_helper(m1, m4):
     Find distance between mins and maxes
     return:
         [m2, m5]
-            m2 -> np.array of abs(max)-abs(prev_min)
+            m2 -> np.array of abs(max) - abs(prev_min)
             m5 -> np.array of abs(prev_max) - abs(min)
     '''
     m2 = np.zeros(m1.size)
@@ -109,6 +110,7 @@ def adj_peak_helper(m1, m4):
     NOTE: The heights start at first peak and look ahead
     NOTE: Uncertain what should be done in case of 1 peak
         I guess in a real scenario it wouldn't matter
+    TODO: Is this the one that needs to check if there is a zero?
     return:
         [m3, m6]
             m2 -> np.array of peak to peak differences
@@ -148,7 +150,6 @@ def find_peaks(sound):
     m1[m1Idx] = sound[m1Idx]
     m4[m4Idx] = sound[m4Idx]
     m2, m5 = peak_valley_helper(m1, m4)
-    # TODO: is m6 working?
     m3, m6 = adj_peak_helper(m1, m4)
     # Convert everything to positive impulses
     m1 = np.abs(np.array(m1))
@@ -164,8 +165,8 @@ def peak_rundown(m, t, fs=12000):
     Elementry period detection using a peak rundown circuit
     TODO: Initial condition for Pav?
     TODO: Limit Pav to be between 4 ms and 10 ms (???)
-    NOTE: We must convert samples to ms
-        y (samples) = fs/1000 * x(ms)
+    NOTE: We must convert samples to ms or s
+        y (samples) = fs/1000 * x(s)
         Pav -> in s
         tau -> in s
         beta -> in s
@@ -177,22 +178,18 @@ def peak_rundown(m, t, fs=12000):
         Pav -> smoothed period estimate
         NOTE: I think paper uses everything in ms?
     '''
-    #m = m[2:len(m)]
+    #m = m[1:len(m)]
     Pav_prev = 0
     Pnew = 0
     # Find first peak (excluding first sample)
     if(len(np.array(np.nonzero(m)).flatten()) != 0):
         start = np.array(np.nonzero(m)).flatten()[0] # np.nonzero(m)[0][0]
-        #if(start == 0):
-        #    start = np.array(np.nonzero(m)).flatten()[1]
     else:
         start = len(m)
     lastPeak = start
     Pav = 0#4/1000
     beta = ((16/1000)/.695)
-    #print(start)
-    #print(len(m))
-    #print(np.array(np.nonzero(m)).flatten())
+
     # Start blanking
     tau = .4*(16/1000)
     for i in range(start, len(m)):
@@ -221,12 +218,10 @@ def peak_rundown(m, t, fs=12000):
 def create_pitch_matrix(curPPE, prevPPE_1, prevPPE_2):
     '''
     Generate the pitch period estimation matrix from the 3 most recent estimations
-    TODO:   idk if the order of n -> n-1 -> n-2 is correct for inputting into matrix
-            I also don't know if this is supposed to be from the ppes or from full iterations of the algorithm 
     NOTE: This can be optimized
     NOTE: Only elements in row one are candidates for estimated pitch (ie. my assumption above should be correct)
     return:
-        ppeMatrix -> 6x6 np.ndarray of pitch period estimations (in ms)
+        ppeMatrix -> 6x6 np.ndarray of pitch period estimations (in s)
     '''
     peMatrix = np.zeros((6,6))
     # Most recent PPEs
@@ -258,7 +253,6 @@ def findThreshold(ppe, bias):
     '''
     activeUnits = 1000 # ms to s
     ppe *= activeUnits
-    #print(ppe)
     # Invalid ppe checks
     if ppe < 1.6:
         threshold = -np.inf
@@ -311,8 +305,7 @@ def findThreshold(ppe, bias):
             threshold = -np.inf
 
     if threshold > 0:
-        threshold /= activeUnits*1000
-#print(threshold)
+        threshold /= activeUnits*1000 # microseconds to sec
 
     return threshold
 
@@ -339,26 +332,51 @@ def calculate_coincidence(peMatrix, bias):
         for x in range(6):
             for y in range(6):
                 # NOTE: we are checking when peMatrix[0][i] == peMatrix[y][x] but that shouldn't matter
-                #print("curPPE: {} compPPE: {}".format(1/peMatrix[0][i],1/peMatrix[y][x]))
                 if np.abs(peMatrix[0][i] - peMatrix[y][x]) <= threshold: #and (0 != y and x != i):
-                    #print("Threshold: {}".format(threshold))
-                #if np.abs(peMatrix[0][i] - peMatrix[y][x])/peMatrix[0][i] < threshold and (0 != y and x != i):
                     coincidences[i] += 1
 
     winnerIdx = np.argmax(coincidences)
-    #print(1/peMatrix[0][:])
-    #print(coincidences)
     winnerVal = coincidences[winnerIdx] 
-    #print(winnerVal)
-    #print("PPEs: {}\n#ofCoincidences: {}".format(1/peMatrix[0][:], coincidences))
-    return [winnerIdx, winnerVal, bias]#[(winnerIdx, winnerVal), bias]
+
+    return [winnerIdx, winnerVal, bias]
+
+def calculate_coincidence2(bias, peMatrix):
+    '''
+    Calculate coicidences of elements in the first row to all 35 other elements.
+        We estimate coincidence between two pitch periods by finding the absolute difference between them and 
+        if it is less then the coincidence window length we say it coincides.
+    NOTE: Can be done in parallel for each bias
+    NOTE: PeMatrix is in secs now so threshold must accomodate
+    NOTE: Tiebreaker is never specified ):<
+    return:
+        [winnerIdx, winnerVal]
+            winnerIdx -> index into peMatrix[0] for ppe with most coincidences
+            winnerVal -> number of coincidences for winnerIdx
+    '''
+    coincidences = np.zeros(6)
+
+    # Check ppe_i to all elements
+    for i in range(6):
+        coincidences[i] -= bias
+        # Find the coincidence window length (threshold) for ppe_i
+        threshold = findThreshold(peMatrix[0][i], bias)
+        for x in range(6):
+            for y in range(6):
+                # NOTE: we are checking when peMatrix[0][i] == peMatrix[y][x] but that shouldn't matter
+                if np.abs(peMatrix[0][i] - peMatrix[y][x]) <= threshold: #and (0 != y and x != i):
+                    coincidences[i] += 1
+
+    winnerIdx = np.argmax(coincidences)
+    winnerVal = coincidences[winnerIdx] 
+
+    return [winnerIdx, winnerVal, bias]
 
 def calculate_ppe_winner(peMatrix, prevWinner):
     '''
     Find the current ppe with the most coincidences in the peMatrix
     TODO: Can be done in parallel for each bias
     return:
-        winner -> ppe (in ms) that best estimates the current pitch period
+        winner -> ppe (in s) that best estimates the current pitch period
     '''
     #winnerArr = np.zeros((4,2))
     winnerArrIdx = np.zeros(4)
@@ -367,7 +385,6 @@ def calculate_ppe_winner(peMatrix, prevWinner):
     thresh = np.zeros(4)
     for i in range(4):
         winnerArrIdx[i], winnerArrCoin[i], thresh[i] = calculate_coincidence(peMatrix, biases[i])
-        #winnerArr[i], thresh[i] = calculate_coincidence(peMatrix, biases[i])
     '''
     winnerIdx = np.argmax(winnerArr, axis=0)[1]
     winner = peMatrix[0][winnerIdx]
@@ -382,20 +399,39 @@ def calculate_ppe_winner(peMatrix, prevWinner):
     #Temp
     winnerIdx = np.argmax(winnerArrCoin)
     winner = peMatrix[0][int(winnerArrIdx[winnerIdx])]
-    #print("(Freq, C#): ({}, {})".format(1/(peMatrix[0][np.array(winnerArrIdx, dtype=np.int)]), winnerArrCoin))
-    #print(thresh[winnerIdx])
-    #print(winnerArrCoin[winnerIdx] - thresh[winnerIdx])
-    #print(winnerArrCoin[winnerIdx])
-    #print(peMatrix[0][np.array(winnerArrIdx[:], dtype=np.int)])
-    #print(winnerArrIdx)
-    #print(1/winner)
-    #print(1/(peMatrix[0][:]))
-    #if (winnerArrCoin[winnerIdx] - 4 < 0 or np.abs(1/prevWinner-1/winner) < 200) or winner == 1:
+
     if winnerArrCoin[winnerIdx] - 0 < 0  or winner == 1:
         winner = 0
     return winner
 
-def pproc_calculate_pitch(sound, t, framesize=.042, fs=12000, ecutoff=.35):
+def calculate_ppe_winner_parallel(peMatrix, prevWinner):
+    '''
+    Find the current ppe with the most coincidences in the peMatrix
+    NOTE: Appears to be signficantly slower than not doing it in parallel
+    return:
+        winner -> ppe (in s) that best estimates the current pitch period
+    '''
+
+    biases = [1,2,5,7]
+
+    fixedMatrix = partial(calculate_coincidence2, peMatrix=peMatrix)
+    with multiprocessing.Pool() as pool:
+        '''
+        Output key:
+            parallelWinners[:][0] = winnerArrIdx
+            parallelWinners[:][1] = winnerArrCoin
+            parallelWinners[:][2] = thresh
+        '''
+        parallelWinners = pool.map(fixedMatrix, biases)
+
+    winnerIdx = np.argmax(parallelWinners[:][1])
+    winner = peMatrix[0][int(parallelWinners[winnerIdx][0])]
+
+    if parallelWinners[winnerIdx][1] - 0 < 0  or winner == 1:
+        winner = 0
+    return winner
+
+def pproc_calculate_pitch(sound, t, framesize=.042, fs=12000, ecutoff=.35, doParallel=False):
     '''
     Combine the entire pproc algorith into one easy to use function
     TODO: What to do with potential leftover frames
@@ -420,38 +456,35 @@ def pproc_calculate_pitch(sound, t, framesize=.042, fs=12000, ecutoff=.35):
     counter = 0
     while i < len(sound):
         # TODO: Would overlap add make this better?
-        #windowedFrame = filtSound[i-updateSize:i]*np.hamming(len(filtSound[i-updateSize:i]))
-        windowedFrame = filtSound[i-updateSize:i]*np.kaiser(len(filtSound[i-updateSize:i]), 1.75) #2
+        windowedFrame = filtSound[i-updateSize:i]*np.kaiser(len(filtSound[i-updateSize:i]), 1.75)
         # LAB 4: V/U detection
         energy = np.sum(np.square(np.abs(filtSound[i-updateSize:i])))
         if energy < ecutoff -.005:
             i += updateSize
             counter += 1
-            #print(energy)
             continue
         # Make peak measurements
-        #print(len(filtSound[i-updateSize:i]))
-        # NOTE: ok so hanning window is amazing... 
-        # TODO: test different windows?
         peaks = find_peaks(windowedFrame)
         # Update previous PPEs
         prevPPE_2 = prevPPE_1
         prevPPE_1 = ppe
         # Get current PPE
-        # TODO: Parallel?
-        for j in range(6):
-            ppe[j] = peak_rundown(peaks[j], t, fs=fs)
+        if doParallel:
+            fixedPeakRundown = partial(peak_rundown, t=t)
+            with multiprocessing.Pool() as pool:
+                ppe = np.array(pool.map(fixedPeakRundown, peaks))
+        else:
+            for j in range(6):
+                ppe[j] = peak_rundown(peaks[j], t, fs=fs)
         if prevPPE_2.all() == 0:
             continue
         # Create the ppe matrix
         peMatrix = create_pitch_matrix(ppe, prevPPE_1, prevPPE_2)
-        #print(1/peMatrix[0][:])
         # Find current best pitch estimate
-        # NOTE: idk what idx into estimtes this is supposed to be?
-        #estimates[(2*i-updateSize)//2] = calculate_ppe_winner(peMatrix, prevWinner)
-        estimates[counter] = calculate_ppe_winner(peMatrix, prevWinner)
-        #print(estimates[counter])
-        #prevWinner = estimates[(2*i-updateSize)//2]
+        if doParallel:
+            estimates[counter] = calculate_ppe_winner_parallel(peMatrix, prevWinner)
+        else:
+            estimates[counter] = calculate_ppe_winner(peMatrix, prevWinner)
         prevWinner = estimates[counter]
         i += updateSize
         counter += 1
