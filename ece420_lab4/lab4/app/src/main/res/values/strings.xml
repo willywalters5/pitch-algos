@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ECE420 Lab4 Pitch Detection</string>
+    <string name="app_name">Pitch Detectify</string>
     <string name="init_status">Status:</string>
     <string name="algo_selected">Algorithm selected:</string>
     <string name="action_settings">Settings</string>
