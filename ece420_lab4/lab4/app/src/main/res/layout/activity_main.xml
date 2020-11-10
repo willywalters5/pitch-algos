@@ -47,62 +47,50 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="543dp"
+        android:layout_marginTop="200dp"
         android:text="Unvoiced"
         android:textAppearance="@android:style/TextAppearance.Material.Headline"
         android:textSize="36sp" />
 
-    <Button
-        android:id="@+id/CEP"
-        android:layout_width="108dp"
-        android:layout_height="53dp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="66dp"
-        android:layout_marginTop="100dp"
-        android:onClick="onCEPClick"
-        android:text="CEP" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/PPROC"
-        android:layout_width="110dp"
-        android:layout_height="53dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="120dp"
-        android:layout_marginTop="100dp"
-        android:layout_marginEnd="66dp"
-        android:layout_toEndOf="@+id/CEP"
-        android:onClick="onPPROCClick"
-        android:text="PPROC" />
+        <Button
+            android:id="@+id/CEP"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onCEPClick"
+            android:text="CEP" />
 
-    <Button
-        android:id="@+id/SIFT"
-        android:layout_width="108dp"
-        android:layout_height="53dp"
-        android:layout_below="@+id/CEP"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="66dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginBottom="560dp"
-        android:onClick="onSIFTClick"
-        android:text="SIFT" />
+        <Button
+            android:id="@+id/PPROC"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onPPROCClick"
+            android:text="PPROC" />
 
-    <Button
-        android:id="@+id/AUTOC"
-        android:layout_width="wrap_content"
-        android:layout_height="55dp"
-        android:layout_below="@+id/PPROC"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="120dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="62dp"
-        android:layout_marginBottom="560dp"
-        android:layout_toEndOf="@+id/SIFT"
-        android:onClick="onAUTOCClick"
-        android:text="AUTOC" />
+        <Button
+            android:id="@+id/SIFT"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onSIFTClick"
+            android:text="SIFT" />
+
+        <Button
+            android:id="@+id/AUTOC"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onAUTOCClick"
+            android:text="AUTOC" />
+    </LinearLayout>
 
 
 </RelativeLayout>
