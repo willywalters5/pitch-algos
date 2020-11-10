@@ -11,5 +11,9 @@
 #include "buf_manager.h"
 
 void ece420ProcessFrame(sample_buf *dataBuf);
+void AutoCPitchDetection(float *bufferIn);
+void CEPPitchDetection(float *bufferIn);
+void PPROCPitchDetection(float *bufferIn);
+void SIFTPitchDetection(float *bufferIn);
 
 #endif //ECE420_MAIN_H

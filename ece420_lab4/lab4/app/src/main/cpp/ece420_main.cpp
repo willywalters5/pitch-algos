@@ -10,7 +10,7 @@
 // JNI Function
 extern "C" {
 JNIEXPORT float JNICALL
-Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass);
+Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass,jint algo);
 }
 
 // Student Variables
@@ -20,6 +20,7 @@ Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass);
 #define START 40
 #define END FRAME_SIZE/4
 float lastFreqDetected = -1;
+int selectedAlgo=0; //0 for AUTOC, 1 for CEP, 2 for PPROC, 3 for SIFT
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
@@ -58,13 +59,23 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     // Finally, write the variable "lastFreqDetected" on completion. If voiced,
     // write your determined frequency. If unvoiced, write -1.
     // ********************* START YOUR CODE HERE *********************** //
-//    def ece420ProcessFrame(frame, Fs):
-//    freq = -1
-//    if np.sum(np.square(frame))>threshold:
-//    auto=np.fft.ifft(np.fft.fft(frame)*np.conjugate(np.fft.fft(frame)))
-//    peak=np.argmax(np.abs(auto[start:len(frame)//2]))
-//    freq=Fs/peak
-//    return freq
+    if(selectedAlgo==0){
+        AutoCPitchDetection(bufferIn);
+        //lastFreqDetected=-1;
+    } else if (selectedAlgo==1){
+        CEPPitchDetection(bufferIn);
+    } else if (selectedAlgo==2){
+        PPROCPitchDetection(bufferIn);
+    }
+    else{
+        SIFTPitchDetection(bufferIn);
+    }
+    // ********************* END YOUR CODE HERE ************************* //
+    gettimeofday(&end, NULL);
+    LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+}
+
+void AutoCPitchDetection(float *bufferIn){
     float energy=0;
     for (int i=0;i<FRAME_SIZE;i++){
         energy+=bufferIn[i]*bufferIn[i];
@@ -102,13 +113,21 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     } else{
         lastFreqDetected=-1;
     }
-
-    // ********************* END YOUR CODE HERE ************************* //
-    gettimeofday(&end, NULL);
-    LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
 }
 
-JNIEXPORT float JNICALL
-Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass) {
+void CEPPitchDetection(float *bufferIn) {
+    lastFreqDetected=-1;
+}
+void PPROCPitchDetection(float *bufferIn) {
+    lastFreqDetected=-1;
+}
+void SIFTPitchDetection(float *bufferIn){
+    lastFreqDetected=-1;
+}
+
+
+            extern "C" JNIEXPORT float JNICALL
+Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass, jint algo) {
+    selectedAlgo=(int)algo;
     return lastFreqDetected;
 }

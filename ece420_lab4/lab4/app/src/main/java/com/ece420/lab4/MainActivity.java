@@ -58,7 +58,7 @@ public class MainActivity extends Activity
     String  nativeSampleBufSize;
     boolean supportRecording;
     Boolean isPlaying = false;
-    String algo;
+    int algo=0;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 1024;
@@ -80,7 +80,7 @@ public class MainActivity extends Activity
         statusView = (TextView)findViewById(R.id.statusView);
         statusViewAlg = (TextView)findViewById(R.id.statusViewAlg);
 
-        algo = "AUTOC";
+        algo = 0;
         statusViewAlg.setText("Algorithm selected: AUTOC");
 
         queryNativeAudioParameters();
@@ -157,20 +157,20 @@ public class MainActivity extends Activity
 
     public void onCEPClick(View view){
         statusViewAlg.setText("Algorithm selected: CEP");
-        algo="CEP";
+        algo=1;
     }
 
     public void onPPROCClick(View view){
         statusViewAlg.setText("Algorithm selected: PPROC");
-        algo="PPROC";
+        algo=2;
     }
     public void onSIFTClick(View view){
         statusViewAlg.setText("Algorithm selected: SIFT");
-        algo="SIFT";
+        algo=3;
     }
     public void onAUTOCClick(View view){
         statusViewAlg.setText("Algorithm selected: AUTOC");
-        algo="AUTOC";
+        algo=0;
     }
 
     public void onEchoClick(View view) {
@@ -284,9 +284,7 @@ public class MainActivity extends Activity
         protected Void doInBackground(Void... params) {
 
             // Update screen, needs to be done on UI thread
-            //if(algo=="AUTOC"){
-                publishProgress(getFreqUpdate());
-            //}
+            publishProgress(getFreqUpdate(algo));
 
             return null;
         }
@@ -321,5 +319,5 @@ public class MainActivity extends Activity
     public static native void startPlay();
     public static native void stopPlay();
 
-    public static native float getFreqUpdate();
+    public static native float getFreqUpdate(int algo);
 }
