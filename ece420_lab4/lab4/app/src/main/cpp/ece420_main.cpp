@@ -22,6 +22,14 @@ Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass,jint algo);
 float lastFreqDetected = -1;
 int selectedAlgo=0; //0 for AUTOC, 1 for CEP, 2 for PPROC, 3 for SIFT
 
+//CEP Variables
+
+#define CEP_ZERO_CROSSING_THRESHOLD FRAME_SIZE/3
+#define CEP_MAX_INTERVAL F_S/60
+#define CEP_MIN_INTERVAL F_S/300
+#define CEP_VOICED_THRESHOLD 2e9
+#define PI 3.1415926
+
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
     struct timeval start;
@@ -61,7 +69,6 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     // ********************* START YOUR CODE HERE *********************** //
     if(selectedAlgo==0){
         AutoCPitchDetection(bufferIn);
-        //lastFreqDetected=-1;
     } else if (selectedAlgo==1){
         CEPPitchDetection(bufferIn);
     } else if (selectedAlgo==2){
@@ -116,7 +123,65 @@ void AutoCPitchDetection(float *bufferIn){
 }
 
 void CEPPitchDetection(float *bufferIn) {
-    lastFreqDetected=-1;
+    //lastFreqDetected=-1;
+    float zero_crossing=0;
+    float energy=0;
+    int prev_sign=0;
+    int curr_sign=0;
+
+    for(int i=0;i<FRAME_SIZE;i++){
+        energy+=bufferIn[i]*bufferIn[i];
+        //Count zero-crossings
+        if(bufferIn[i]>0){
+            curr_sign=1;
+        }
+        else{
+            curr_sign=-1;
+        }
+        if(curr_sign!=prev_sign){
+            zero_crossing++;
+        }
+        prev_sign=curr_sign;
+    }
+    if(energy<CEP_VOICED_THRESHOLD || zero_crossing>CEP_ZERO_CROSSING_THRESHOLD){
+        lastFreqDetected=-1;
+        return;
+    }
+
+    float windowed[FRAME_SIZE];
+    for(int i=0;i<FRAME_SIZE;i++){
+        windowed[i]=bufferIn[i]*(0.54-0.46*cos((2*PI*i)/(FRAME_SIZE-1)));
+    }
+
+    kiss_fft_cfg cfg=kiss_fft_alloc(FRAME_SIZE,0,NULL,NULL);
+    kiss_fft_cfg cfg_inv=kiss_fft_alloc(FRAME_SIZE,1,NULL,NULL);
+
+    kiss_fft_cpx in[FRAME_SIZE];
+    kiss_fft_cpx fft[FRAME_SIZE];
+    kiss_fft_cpx cep[FRAME_SIZE];
+    //compute FFT
+    for (int i=0;i<FRAME_SIZE;i++){
+        in[i].r=windowed[i];
+        in[i].i=0;
+    }
+    kiss_fft(cfg,in,fft);
+
+    //compute log value of absolute value of fft
+    for (int i=0;i<FRAME_SIZE;i++){
+        fft[i].r=log(sqrt(fft[i].r*fft[i].r+fft[i].i*fft[i].i));
+        fft[i].i=0;
+    }
+    kiss_fft(cfg_inv,fft,cep);
+    int pitch_interval=0;
+    float max_cep=-1;
+    for (int i=CEP_MIN_INTERVAL;i<CEP_MAX_INTERVAL;i++){
+        float curr_cep=cep[i].r*cep[i].r+cep[i].i*cep[i].i;
+        if(curr_cep>max_cep){
+            max_cep=curr_cep;
+            pitch_interval=i;
+        }
+    }
+    lastFreqDetected=F_S/pitch_interval;
 }
 void PPROCPitchDetection(float *bufferIn) {
     lastFreqDetected=-1;
@@ -126,7 +191,7 @@ void SIFTPitchDetection(float *bufferIn){
 }
 
 
-            extern "C" JNIEXPORT float JNICALL
+extern "C" JNIEXPORT float JNICALL
 Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass, jint algo) {
     selectedAlgo=(int)algo;
     return lastFreqDetected;
