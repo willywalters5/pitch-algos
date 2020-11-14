@@ -16,7 +16,7 @@ Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass,jint algo);
 // Student Variables
 #define F_S 48000
 #define FRAME_SIZE 1024
-#define VOICED_THRESHOLD 3e9  // Find your own threshold
+#define VOICED_THRESHOLD 0  // Find your own threshold
 #define START 40
 #define END FRAME_SIZE/4
 float lastFreqDetected = -1;
@@ -83,43 +83,93 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 }
 
 void AutoCPitchDetection(float *bufferIn){
-    float energy=0;
-    for (int i=0;i<FRAME_SIZE;i++){
-        energy+=bufferIn[i]*bufferIn[i];
-    }
-    if(energy>VOICED_THRESHOLD){
-        kiss_fft_cfg cfg=kiss_fft_alloc(FRAME_SIZE,0,NULL,NULL);
-        kiss_fft_cfg cfg_inv=kiss_fft_alloc(FRAME_SIZE,1,NULL,NULL);
+    kiss_fft_cpx autoCfft[FRAME_SIZE] = {};
+    kiss_fft_cpx autoC[FRAME_SIZE] = {};
+    kiss_fft_cpx bufCpx[FRAME_SIZE];
+    kiss_fft_cfg cfg = kiss_fft_alloc( FRAME_SIZE ,0 ,NULL, NULL );
+    kiss_fft_cfg cfg_ifft = kiss_fft_alloc( FRAME_SIZE ,1 ,NULL, NULL );
+    int numPeriods = 2;
+    float tolerance = 0.5;
+    int searchRange = FRAME_SIZE/numPeriods;
+    float maxAutoC = 0;
+    float minAutoC = 999;
+    int minFirst = 0;
+    int maxFirst = 0;
+    int minSecond = 0;
+    int period = 0;
 
-        kiss_fft_cpx in[FRAME_SIZE];
-        kiss_fft_cpx fft[FRAME_SIZE];
-        kiss_fft_cpx ifft[FRAME_SIZE];
-
-        for (int i=0;i<FRAME_SIZE;i++){
-            in[i].r=bufferIn[i];
-            in[i].i=0;
-        }
-        kiss_fft(cfg,in,fft);
-        for (int i=0;i<FRAME_SIZE;i++){
-            in[i].r=(fft[i].r*fft[i].r+fft[i].i*fft[i].i);
-            in[i].i=0;
-        }
-        kiss_fft(cfg_inv,in,ifft);
-        float max_value=-1;
-        int peak=0;
-        for (int i=START;i<END;i++){
-            float mag=ifft[i].r*ifft[i].r+ifft[i].i*ifft[i].i;
-            if(mag>max_value){
-                max_value=mag;
-                peak=i;
-            }
-        }
-        lastFreqDetected=F_S/peak;
-        free(cfg);
-        free(cfg_inv);
-    } else{
-        lastFreqDetected=-1;
+    //float testReal[2] = {1,2};
+    //kiss_fft_cpx testCpx[2];
+    //memcpy(testCpx, const_cast<{{testReal, 0}}>, sizeof(testCpx));
+    // Check if frame is voiced and also prepare buffer for fft if needed
+    float energy = 0;
+    int i;
+    for(i = 0; i < FRAME_SIZE; ++i) {
+        energy += abs(bufferIn[i])*abs(bufferIn[i]);
+        bufCpx[i].r = bufferIn[i];
+        bufCpx[i].i = 0;
     }
+    if(energy < VOICED_THRESHOLD) {
+        lastFreqDetected = -1;
+        return;
+    }
+
+    // Find the auto correlation using fft method
+    kiss_fft(cfg, bufCpx , autoCfft);
+    free(cfg);
+    for(i = 0; i < FRAME_SIZE; ++i) {
+        // fft(x) * conj(fft(x))
+        autoCfft[i].r = (autoCfft[i].r*autoCfft[i].r) + (autoCfft[i].i*autoCfft[i].i);
+        autoCfft[i].i = 0;
+    }
+    kiss_fft(cfg_ifft, autoCfft, autoC);
+    free(cfg_ifft);
+
+    // Find the min and max of the autoCorrelation
+    //maxAutoC = std::max_element(autoC + 2, autoC + searchRange)->r;
+    //minAutoC = std::min_element(autoC + 2, autoC + searchRange)->r;
+    for(i = 2; i < searchRange; ++i) {
+        if(maxAutoC < autoC[i].r) {
+            maxAutoC = autoC[i].r;
+        }
+        if(minAutoC > autoC[i].r) {
+            minAutoC = autoC[i].r;
+        }
+    }
+
+    // Find first min
+    for(i = 2; i < searchRange; ++i) {
+        if(autoC[i].r <= minAutoC + tolerance) {
+            minFirst = i;
+            break;
+        }
+    }
+    // Find First max after first min
+    for(i = minFirst; i < searchRange; ++i) {
+        if(autoC[i].r >= maxAutoC - tolerance) {
+            maxFirst = i;
+            break;
+        }
+    }
+    // Find next min
+    for(i = maxFirst; i < searchRange; ++i) {
+        minSecond = i;
+        if(autoC[i].r <= minAutoC + tolerance) {
+            break;
+        }
+    }
+
+    // Calculate period
+    for(i = maxFirst; i < minSecond; ++i) {
+        if(autoC[i].r > autoC[period].r) {
+            period = i;
+        }
+    }
+    //period = findMaxArrayIdx(autoC.r, maxFirst, minSecond) + maxFirst;
+    period += maxFirst;
+    lastFreqDetected = F_S/period;
+
+    return;
 }
 
 void CEPPitchDetection(float *bufferIn) {
