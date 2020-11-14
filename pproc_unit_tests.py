@@ -21,21 +21,36 @@ def test_generate_filters(fs=12000):
     '''
     Test to make sure the filter appears as desired by viewing a graph :)
     '''
-    b = pproc.generate_filter('default')
-    w, h = signal.freqz(b)
+    b = pproc.generate_filter('default', fs=fs)
+    w, h = signal.freqz(b, fs=fs)
     plt.figure()
     plt.title('Filter Magnitude Response')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('dB')
-    plt.plot((w/np.pi)*(fs/2), 20* np.log10(abs(h)))
+    #plt.plot((w/np.pi)*(fs/2), 20* np.log10(abs(h)))
+    plt.plot(w, 20* np.log10(abs(h)))
     plt.show()
+    return
+
+def print_filter_coef(fs=12000):
+    '''
+    Print out the filter coefficients for use on Android
+    '''
+    b = pproc.generate_filter('default', fs=fs)
+    coef_str = "{"
+    for val in b[::-1]:
+        coef_str += str(val) + ", "
+    coef_str = coef_str[:-2]
+    coef_str += "};"
+    print(coef_str)
+
     return
 
 def test_filter_audio(fs=12000):
     '''
     Test to make sure the filter attenuates as desired by plotting spectrogram of chirp
     '''
-    b = pproc.generate_filter('default')
+    b = pproc.generate_filter('default', fs=fs)
     t = np.arange(0, int(5*fs)) / fs
     chirp = signal.chirp(t, 50, 5, 1500, method='linear')
     #plt.figure()
@@ -302,8 +317,8 @@ def time_test():
     print("Average duration for each pitch calculation {} seconds".format(duration))
     return
     
-#test_generate_filters()
-#test_filter_audio()
+test_generate_filters(48000)
+test_filter_audio(48000)
 #test_find_peaks()
 #test_all("PureTones/100Hz.wav", frameSize=.2)
 #test_all("PureTones/100Hz.wav")
@@ -313,5 +328,6 @@ def time_test():
 
 #test_gen_sin(200, 1.5, silenceLength=.25, noiseRat=0.05)
 #error_test()
-time_test()
+#time_test()
+print_filter_coef(48000)
 

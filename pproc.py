@@ -26,7 +26,7 @@ def generate_filter(filterType, fs=12000):
     cutoff = 375 #600
     trans_width = 450  #350 # Width of transition from pass band to stop band, Hz
     numtaps = 100   # Size of the FIR filter.
-    myFilter = signal.remez(numtaps, [0, cutoff, cutoff + trans_width, 0.5*fs], [1, 0], Hz=fs)
+    myFilter = signal.remez(numtaps, [0, cutoff, cutoff + trans_width, 0.5*fs], [1, 0], fs=fs, maxiter=5000)
     
     return myFilter
     
