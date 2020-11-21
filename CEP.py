@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.io.wavfile import read, write
 from matplotlib import pyplot as plt
-from pitch_parselmouth import compute_pitch_praat
-from Testing import compute_errors,compute_errors_mean
+#from pitch_parselmouth import compute_pitch_praat
+#from Testing import compute_errors,compute_errors_mean
 
 frame_dur=512
 zero_crossing_threshold=frame_dur/5
@@ -13,6 +13,9 @@ fft_value=512
 def calculate_pitch_CEP(wav_file,frame_dur):
     print("Current wav file: {} ".format(wav_file))
     rate,data=read(wav_file)
+    duration=int(len(data)/rate)+1
+    data = (np.sin(2*np.pi*np.arange(rate*duration)*110/rate)).astype(np.float32)
+    print(data)
     frame_num=int(len(data)/frame_dur)+1
     frames=np.zeros((frame_num,frame_dur))
     pitch=np.zeros((frame_num))
@@ -35,27 +38,28 @@ def calculate_pitch_CEP(wav_file,frame_dur):
         min_interval,max_interval=rate//max_pitch,rate//min_pitch
         pitch_interval=np.argmax(np.square(cep[min_interval:max_interval]))+min_interval
         pitch[i]=rate/pitch_interval
-        # print(i,pitch[i],pitch_interval,min_interval,max_interval)
-        # plt.plot(np.abs(cep[1:]))
-        # plt.show()
+        print(i,pitch[i],pitch_interval,min_interval,max_interval)
+        plt.plot(np.abs(cep[1:]))
+        plt.show()
         #search range 60-300 Hz
-    pitch_praat=compute_pitch_praat(wav_file,pitch,True)
+
+    #pitch_praat=compute_pitch_praat(wav_file,pitch,True)
     # print("CEP",pitch,len(pitch))
     # print("praat",pitch_praat,len(pitch_praat))
-    total_len=min(len(pitch),len(pitch_praat))
-    compute_errors(pitch[:total_len],pitch_praat[:total_len],rate,True)
-    return pitch[:total_len],pitch_praat[:total_len]
+    #total_len=min(len(pitch),len(pitch_praat))
+    #compute_errors(pitch[:total_len],pitch_praat[:total_len],rate,True)
+    #return pitch[:total_len],pitch_praat[:total_len]
 
 pitches=[]
 pitches_praat=[]
-for i in range(1,9):
+for i in range(1,2):
     pitch,pitch_praat=calculate_pitch_CEP("Recordings/{}_AM1.wav".format(i),frame_dur)
-    pitches.append(pitch)
-    pitches_praat.append(pitch_praat)
-    pitch,pitch_praat=calculate_pitch_CEP("Recordings/{}_AM2.wav".format(i),frame_dur)
-    pitches.append(pitch)
-    pitches_praat.append(pitch_praat)
-    pitch,pitch_praat=calculate_pitch_CEP("Recordings/{}_AF1.wav".format(i),frame_dur)
-    pitches.append(pitch)
-    pitches_praat.append(pitch_praat)
+    #pitches.append(pitch)
+    #pitches_praat.append(pitch_praat)
+    # pitch,pitch_praat=calculate_pitch_CEP("Recordings/{}_AM2.wav".format(i),frame_dur)
+    # pitches.append(pitch)
+    # pitches_praat.append(pitch_praat)
+    # pitch,pitch_praat=calculate_pitch_CEP("Recordings/{}_AF1.wav".format(i),frame_dur)
+    # pitches.append(pitch)
+    # pitches_praat.append(pitch_praat)
 compute_errors_mean(pitches,pitches_praat,12000)

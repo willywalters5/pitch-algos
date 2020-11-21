@@ -61,8 +61,7 @@ public class MainActivity extends Activity
     int algo=0;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
-    //private static final int FRAME_SIZE = 1024;
-    private static final int FRAME_SIZE = 1024*2;
+    private static final int FRAME_SIZE = 2048;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
