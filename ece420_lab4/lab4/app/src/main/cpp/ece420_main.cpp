@@ -6,11 +6,18 @@
 #include "ece420_main.h"
 #include "ece420_lib.h"
 #include "kiss_fft/kiss_fft.h"
+#include "pproc_helper.h"
+#include "numpy_scipy_funcs.h"
+#include <vector>
 
 // JNI Function
 extern "C" {
 JNIEXPORT float JNICALL
 Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass,jint algo);
+}
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_cppCleanup(JNIEnv *env, jclass);
 }
 
 // Student Variables
@@ -27,8 +34,18 @@ int selectedAlgo=0; //0 for AUTOC, 1 for CEP, 2 for PPROC, 3 for SIFT
 #define CEP_ZERO_CROSSING_THRESHOLD FRAME_SIZE/3
 #define CEP_MAX_INTERVAL F_S/60
 #define CEP_MIN_INTERVAL F_S/300
-#define CEP_VOICED_THRESHOLD 2e7
+#define CEP_VOICED_THRESHOLD 2e9
 #define PI 3.1415926
+
+// PPROC Variables
+float pprocCircBuf[PPROC_N_TAPS] = {};
+int pprocCircBufIdx = 0;
+kaiserWinObj kaiserWin(FRAME_SIZE, 1.75);
+double* prevPPE_1 = NULL;
+double* prevPPE_2 = NULL;
+double* ppe = NULL;
+double prevWinner = -1;
+
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
@@ -234,8 +251,74 @@ void CEPPitchDetection(float *bufferIn) {
     lastFreqDetected=F_S/pitch_interval;
 }
 void PPROCPitchDetection(float *bufferIn) {
-    lastFreqDetected=-1;
+    // Apply LPF
+    for (int sampleIdx = 0; sampleIdx < FRAME_SIZE; sampleIdx++) {
+        float sample = bufferIn[sampleIdx];
+        float output = firFilter(sample, pprocCircBuf, pprocCircBufIdx);
+        bufferIn[sampleIdx] = output;
+    }
+
+    // Apply Kaiser window
+    for(int sampleIdx = 0; sampleIdx < FRAME_SIZE; sampleIdx++) {
+        bufferIn[sampleIdx] *= kaiserWin.getKaiserCoef(sampleIdx);
+    }
+
+    // V/U detection
+    float energy = 0;
+    for(int i = 0 ; i < FRAME_SIZE; i++) {
+        energy += bufferIn[i] * bufferIn[i];
+    }
+    if(energy < 1e5) {
+       lastFreqDetected = -1;
+       return;
+    }
+
+    // Make peak measurements
+    ///@note stack overflow anyone?
+    float m1[FRAME_SIZE] = {};
+    float m2[FRAME_SIZE] = {};
+    float m3[FRAME_SIZE] = {};
+    float m4[FRAME_SIZE] = {};
+    float m5[FRAME_SIZE] = {};
+    float m6[FRAME_SIZE] = {};
+    find_peaks(bufferIn, m1, m2 ,m3, m4, m5, m6);
+    float* peaks[6] = {m1, m2, m3, m4, m5, m6};
+
+    // Update previous PPEs
+    ///@todo optimize w/out dynamic allocation
+    if(prevPPE_2 != NULL)
+        delete[] prevPPE_2;
+    prevPPE_2 = prevPPE_1;
+    prevPPE_1 = ppe;
+    ppe = new double[6];
+
+    // Get current PPE
+    for(int j = 0; j < 6; ++j) {
+        ppe[j] = peak_rundown(peaks[j]);
+    }
+    if(prevPPE_2 == NULL || prevPPE_1 == NULL) {
+        lastFreqDetected = -1;
+        return;
+    }
+
+    // Create PPE matrix
+    ///@todo see if this is necessary
+    double* peMatrix = new double[36]; // Please no stack overflow :)
+   // double* peMatAddr = &peMatrix[0][0]; ///@note this is unsafe, but ok because we know it is 6x6
+    create_pitch_matrix(ppe, prevPPE_1, prevPPE_2, peMatrix);
+
+    // Find current best pitch estimate
+    prevWinner = calculate_ppe_winner(peMatrix, prevWinner);
+    delete[] peMatrix;
+
+    if(prevWinner == -1)
+        lastFreqDetected = -1;
+    else
+        lastFreqDetected = 1/prevWinner;
+    //*/
+    //lastFreqDetected = -1;
 }
+
 void SIFTPitchDetection(float *bufferIn){
     lastFreqDetected=-1;
 }
@@ -245,4 +328,13 @@ extern "C" JNIEXPORT float JNICALL
 Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass, jint algo) {
     selectedAlgo=(int)algo;
     return lastFreqDetected;
+}
+extern "C" JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_cppCleanup(JNIEnv *env, jclass) {
+    if(ppe != NULL)
+        delete[] ppe;
+    if(prevPPE_1 != NULL)
+        delete[] prevPPE_1;
+    if(prevPPE_2 != NULL)
+        delete[] prevPPE_2;
 }

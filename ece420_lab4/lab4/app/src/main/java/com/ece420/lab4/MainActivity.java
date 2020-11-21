@@ -103,6 +103,7 @@ public class MainActivity extends Activity
             deleteSLEngine();
             isPlaying = false;
         }
+        cppCleanup();
         super.onDestroy();
     }
 
@@ -194,8 +195,7 @@ public class MainActivity extends Activity
     private void queryNativeAudioParameters() {
         AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         nativeSampleRate  =  myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-        //nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-        nativeSampleBufSize = Integer.toString(FRAME_SIZE);
+        nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
         int recBufSize = AudioRecord.getMinBufferSize(
                 Integer.parseInt(nativeSampleRate),
                 AudioFormat.CHANNEL_IN_MONO,
@@ -321,4 +321,5 @@ public class MainActivity extends Activity
     public static native void stopPlay();
 
     public static native float getFreqUpdate(int algo);
+    public static native void cppCleanup();
 }

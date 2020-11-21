@@ -9,6 +9,8 @@ add_library(echo SHARED
             audio_recorder.cpp
             debug_utils.cpp
             kiss_fft/kiss_fft.c
+            pproc_helper.cpp
+            numpy_scipy_funcs.cpp
             ece420_lib.cpp
             ece420_main.cpp)
 
