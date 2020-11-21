@@ -15,7 +15,7 @@ Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass,jint algo);
 
 // Student Variables
 #define F_S 48000
-#define FRAME_SIZE 1024
+#define FRAME_SIZE 2048
 #define VOICED_THRESHOLD 0  // Find your own threshold
 #define START 40
 #define END FRAME_SIZE/4
@@ -27,7 +27,7 @@ int selectedAlgo=0; //0 for AUTOC, 1 for CEP, 2 for PPROC, 3 for SIFT
 #define CEP_ZERO_CROSSING_THRESHOLD FRAME_SIZE/3
 #define CEP_MAX_INTERVAL F_S/60
 #define CEP_MIN_INTERVAL F_S/300
-#define CEP_VOICED_THRESHOLD 2e9
+#define CEP_VOICED_THRESHOLD 2e7
 #define PI 3.1415926
 
 void ece420ProcessFrame(sample_buf *dataBuf) {

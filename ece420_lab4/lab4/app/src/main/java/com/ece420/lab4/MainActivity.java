@@ -61,7 +61,7 @@ public class MainActivity extends Activity
     int algo=0;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
-    private static final int FRAME_SIZE = 1024;
+    private static final int FRAME_SIZE = 2048;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,7 +194,8 @@ public class MainActivity extends Activity
     private void queryNativeAudioParameters() {
         AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         nativeSampleRate  =  myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-        nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        //nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        nativeSampleBufSize = Integer.toString(FRAME_SIZE);
         int recBufSize = AudioRecord.getMinBufferSize(
                 Integer.parseInt(nativeSampleRate),
                 AudioFormat.CHANNEL_IN_MONO,
