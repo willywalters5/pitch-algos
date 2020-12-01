@@ -1,0 +1,3 @@
+C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/.cxx/cmake/debug/arm64-v8a/CMakeFiles/echo.dir
+C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/.cxx/cmake/debug/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/.cxx/cmake/debug/arm64-v8a/CMakeFiles/rebuild_cache.dir
