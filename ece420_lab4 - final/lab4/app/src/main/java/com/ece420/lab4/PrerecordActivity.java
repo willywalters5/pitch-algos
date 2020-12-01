@@ -1,4 +1,5 @@
 package com.ece420.lab4;
+import com.ece420.lab4.*;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +17,13 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 
 public class PrerecordActivity extends Activity {
     CheckBox mCEP,mPPROC,mSIFT,mAUTOC;
@@ -84,7 +92,7 @@ public class PrerecordActivity extends Activity {
                 Toast.LENGTH_SHORT).show();
     }
 
-    public void onAnalyzeClick(View view){
+    public void onAnalyzeClick(View view) throws IOException, WavFileException {
         if (!mCEP.isChecked() && !mPPROC.isChecked() && !mSIFT.isChecked() && !mAUTOC.isChecked()){
             Toast.makeText(this, "Please select at least one algorithm!",
                     Toast.LENGTH_SHORT).show();
@@ -94,9 +102,14 @@ public class PrerecordActivity extends Activity {
         radioButton = (RadioButton) findViewById(radioId);
         //Play audio associated with radioButton
         if(radioButton.getText().equals("Child_247")){
-            Toast.makeText(this, "Playing Child audio",
+//            Toast.makeText(this, "Playing Child audio",
+//                    Toast.LENGTH_SHORT).show();
+            //audioChild.start();
+            InputStream inputStream=getResources().openRawResource(R.raw.c_247);
+            WavFile wavFile=WavFile.openWavFile(inputStream);
+            Toast.makeText(this, "Number of channels"+wavFile.getNumChannels(),
                     Toast.LENGTH_SHORT).show();
-            audioChild.start();
+            process_frames(wavFile);
         }
         else if(radioButton.getText().equals("Female_185")){
             Toast.makeText(this, "Playing Female audio",
@@ -108,6 +121,12 @@ public class PrerecordActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
             audioMale.start();
         }
+    }
+
+    public void process_frames(WavFile wavFile) throws IOException, WavFileException {
+        int numFrames = (int)(wavFile.getNumFrames()/FRAME_SIZE+1);
+        float[] currFrame= new float[(int)wavFile.getNumFrames()];
+        wavFile.readFrames(currFrame,(int)wavFile.getNumFrames());
     }
 }
 

@@ -10,3 +10,15 @@
 39	5807	628395889	CMakeFiles/echo.dir/ece420_main.cpp.o	4770b52b3beaa06f
 29	5959	628395890	CMakeFiles/echo.dir/audio_player.cpp.o	b0814729af6a7007
 5960	7224	628395891	C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/build/intermediates/cmake/debug/obj/arm64-v8a/libecho.so	291e839ffd4ffd05
+0	18	0	clean	a769148af1e5d1bc
+226	2647	628565630	CMakeFiles/echo.dir/kiss_fft/kiss_fft.c.o	9cb622829078c5a3
+379	4302	628565632	CMakeFiles/echo.dir/ece420_lib.cpp.o	81135b0793843179
+54	4795	628565632	CMakeFiles/echo.dir/audio_common.cpp.o	6d3aed8962dce20e
+366	4898	628565632	CMakeFiles/echo.dir/ece420_main.cpp.o	4770b52b3beaa06f
+357	4992	628565632	CMakeFiles/echo.dir/pproc_helper.cpp.o	c2e64db6b6a7f76e
+373	5007	628565632	CMakeFiles/echo.dir/numpy_scipy_funcs.cpp.o	ad1a0a88e0d966bf
+343	5053	628565632	CMakeFiles/echo.dir/debug_utils.cpp.o	6c1e2e1804250d6b
+216	5066	628565632	CMakeFiles/echo.dir/audio_main.cpp.o	a64d8a4a1c4ae436
+221	5176	628565633	CMakeFiles/echo.dir/audio_recorder.cpp.o	5baeb1674637c5cb
+211	5288	628565633	CMakeFiles/echo.dir/audio_player.cpp.o	b0814729af6a7007
+5289	6496	628565634	C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/build/intermediates/cmake/debug/obj/arm64-v8a/libecho.so	291e839ffd4ffd05
