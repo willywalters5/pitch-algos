@@ -1,7 +1,0 @@
-Executable : C:\Users\WW\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe
-arguments : 
--C
-C:\Users\WW\ECE420\pitch-algos\ece420_lab4 - final\lab4\app\.cxx\cmake\debug\x86
-echo
-jvmArgs : 
-

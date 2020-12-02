@@ -22,3 +22,8 @@
 221	5176	628565633	CMakeFiles/echo.dir/audio_recorder.cpp.o	5baeb1674637c5cb
 211	5288	628565633	CMakeFiles/echo.dir/audio_player.cpp.o	b0814729af6a7007
 5289	6496	628565634	C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/build/intermediates/cmake/debug/obj/arm64-v8a/libecho.so	291e839ffd4ffd05
+10	1521	628577205	CMakeFiles/echo.dir/audio_main.cpp.o	a64d8a4a1c4ae436
+72	1526	628577205	CMakeFiles/echo.dir/ece420_main.cpp.o	4770b52b3beaa06f
+1526	1921	628577206	C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/build/intermediates/cmake/debug/obj/arm64-v8a/libecho.so	291e839ffd4ffd05
+10	918	628580771	CMakeFiles/echo.dir/ece420_main.cpp.o	4770b52b3beaa06f
+918	1183	628580771	C:/Users/WW/ECE420/pitch-algos/ece420_lab4 - final/lab4/app/build/intermediates/cmake/debug/obj/arm64-v8a/libecho.so	291e839ffd4ffd05

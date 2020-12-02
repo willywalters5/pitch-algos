@@ -1,2 +1,0 @@
-ninja: Entering directory `C:\Users\WW\ECE420\pitch-algos\ece420_lab4 - final\lab4\app\.cxx\cmake\debug\x86'
-ninja: no work to do.

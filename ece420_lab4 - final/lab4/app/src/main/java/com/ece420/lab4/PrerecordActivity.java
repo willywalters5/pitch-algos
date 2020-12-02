@@ -1,5 +1,9 @@
 package com.ece420.lab4;
 import com.ece420.lab4.*;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -32,12 +36,8 @@ public class PrerecordActivity extends Activity {
     RadioGroup radioGroup;
     Button clear;
     MediaPlayer audioChild,audioFemale,audioMale;
+    GraphView graph;
 
-
-    ImageView stftView;
-    Bitmap bitmap;
-    Canvas canvas;
-    Paint paint;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 2048;
@@ -62,15 +62,7 @@ public class PrerecordActivity extends Activity {
         audioChild=MediaPlayer.create(PrerecordActivity.this,R.raw.c_247);
         audioFemale=MediaPlayer.create(PrerecordActivity.this,R.raw.f_185);
         audioMale=MediaPlayer.create(PrerecordActivity.this,R.raw.m_82);
-
-        stftView = (ImageView) this.findViewById(R.id.stftView);
-        bitmap =  Bitmap.createBitmap((FRAME_SIZE), BITMAP_HEIGHT, Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
-        canvas.drawColor(Color.BLACK);
-        paint = new Paint();
-        paint.setColor(Color.GREEN);
-        paint.setStyle(Paint.Style.FILL);
-        stftView.setImageBitmap(bitmap);
+        graph = (GraphView) findViewById(R.id.graph);
     }
 
     public void onChangeActivityClick(View view){
@@ -107,8 +99,6 @@ public class PrerecordActivity extends Activity {
             //audioChild.start();
             InputStream inputStream=getResources().openRawResource(R.raw.c_247);
             WavFile wavFile=WavFile.openWavFile(inputStream);
-            Toast.makeText(this, "Number of channels"+wavFile.getNumChannels(),
-                    Toast.LENGTH_SHORT).show();
             process_frames(wavFile);
         }
         else if(radioButton.getText().equals("Female_185")){
@@ -124,10 +114,23 @@ public class PrerecordActivity extends Activity {
     }
 
     public void process_frames(WavFile wavFile) throws IOException, WavFileException {
-        int numFrames = (int)(wavFile.getNumFrames()/FRAME_SIZE+1);
-        float[] currFrame= new float[(int)wavFile.getNumFrames()];
-        wavFile.readFrames(currFrame,(int)wavFile.getNumFrames());
+        int num_frames = (int)(wavFile.getNumFrames()/FRAME_SIZE);
+        float[] data= new float[(int)wavFile.getNumFrames()];
+        wavFile.readFrames(data,(int)wavFile.getNumFrames());
+        float[] curr_frame = new float[FRAME_SIZE];
+        float[] pitch_values=new float[num_frames];
+        PointsGraphSeries<DataPoint> series = new PointsGraphSeries<>();
+        for(int i=0; i<num_frames; i++){
+            curr_frame = Arrays.copyOfRange(data, i*FRAME_SIZE, (i+1)*FRAME_SIZE);
+            pitch_values[i]=getCEPUpdate(curr_frame);
+            series.appendData(new DataPoint(i*0.04,pitch_values[i]), true,num_frames);
+        }
+        graph.addSeries(series);
+        series.setShape(PointsGraphSeries.Shape.POINT);
     }
+
+    public static native float getCEPUpdate(float [] curr_frame);
+
 }
 
 

@@ -192,13 +192,10 @@
         android:layout_below="@+id/analyze_button"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/stftView"
-            app:srcCompat="@android:color/holo_blue_light"
-            android:layout_width="fill_parent"
-            android:layout_height="500dp"
-            android:layout_centerVertical="true"
-            android:scaleType="fitXY" />
+        <com.jjoe64.graphview.GraphView
+            android:layout_width="match_parent"
+            android:layout_height="200dip"
+            android:id="@+id/graph" />
 
     </LinearLayout>
 
