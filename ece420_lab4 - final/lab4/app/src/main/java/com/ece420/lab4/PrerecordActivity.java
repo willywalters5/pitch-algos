@@ -12,7 +12,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +30,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PrerecordActivity extends Activity {
     CheckBox mCEP,mPPROC,mSIFT,mAUTOC;
@@ -63,6 +67,7 @@ public class PrerecordActivity extends Activity {
         audioFemale=MediaPlayer.create(PrerecordActivity.this,R.raw.f_185);
         audioMale=MediaPlayer.create(PrerecordActivity.this,R.raw.m_82);
         graph = (GraphView) findViewById(R.id.graph);
+
     }
 
     public void onChangeActivityClick(View view){
@@ -94,8 +99,6 @@ public class PrerecordActivity extends Activity {
         radioButton = (RadioButton) findViewById(radioId);
         //Play audio associated with radioButton
         if(radioButton.getText().equals("Child_247")){
-//            Toast.makeText(this, "Playing Child audio",
-//                    Toast.LENGTH_SHORT).show();
             //audioChild.start();
             InputStream inputStream=getResources().openRawResource(R.raw.c_247);
             WavFile wavFile=WavFile.openWavFile(inputStream);

@@ -89,17 +89,16 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     // Finally, write the variable "lastFreqDetected" on completion. If voiced,
     // write your determined frequency. If unvoiced, write -1.
     // ********************* START YOUR CODE HERE *********************** //
-    CEPPitchDetection(bufferInPrerecord);
-    //    if(selectedAlgo==0){
-//        AutoCPitchDetection(bufferIn);
-//    } else if (selectedAlgo==1){
-//        CEPPitchDetection(bufferIn);
-//    } else if (selectedAlgo==2){
-//        PPROCPitchDetection(bufferIn);
-//    }
-//    else{
-//        SIFTPitchDetection(bufferIn);
-//    }
+    if(selectedAlgo==0){
+        AutoCPitchDetection(bufferIn);
+    } else if (selectedAlgo==1){
+        CEPPitchDetection(bufferIn);
+    } else if (selectedAlgo==2){
+        PPROCPitchDetection(bufferIn);
+    }
+    else{
+        SIFTPitchDetection(bufferIn);
+    }
     // ********************* END YOUR CODE HERE ************************* //
     gettimeofday(&end, NULL);
     LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
@@ -359,6 +358,7 @@ Java_com_ece420_lab4_PrerecordActivity_getCEPUpdate(JNIEnv *env, jclass clazz,
         // Convert Java string to std::string
         bufferInPrerecord[i] = jBuffer[i];
     }
+    CEPPitchDetection(bufferInPrerecord);
     // Release memory
     env->ReleaseFloatArrayElements(jframe,jBuffer,0);
     return lastFreqDetected;
