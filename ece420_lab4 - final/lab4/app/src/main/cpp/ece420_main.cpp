@@ -21,7 +21,7 @@ Java_com_ece420_lab4_MainActivity_cppCleanup(JNIEnv *env, jclass);
 }
 extern "C" {
 JNIEXPORT float JNICALL
-Java_com_ece420_lab4_PrerecordActivity_getCEPUpdate(JNIEnv *env, jclass,jfloatArray curr_frame);
+Java_com_ece420_lab4_PrerecordActivity_getUpdate(JNIEnv *env, jclass,jfloatArray curr_frame,jint algo);
 }
 
 // Student Variables
@@ -348,8 +348,8 @@ Java_com_ece420_lab4_MainActivity_cppCleanup(JNIEnv *env, jclass) {
 
 extern "C"
 JNIEXPORT jfloat JNICALL
-Java_com_ece420_lab4_PrerecordActivity_getCEPUpdate(JNIEnv *env, jclass clazz,
-                                                    jfloatArray jframe) {
+Java_com_ece420_lab4_PrerecordActivity_getUpdate(JNIEnv *env, jclass clazz,
+                                                    jfloatArray jframe, jint algo) {
     // TODO: implement getCEPUpdate()
     int len = env->GetArrayLength(jframe);
     jfloat* jBuffer = env->GetFloatArrayElements(jframe, 0);
@@ -358,7 +358,16 @@ Java_com_ece420_lab4_PrerecordActivity_getCEPUpdate(JNIEnv *env, jclass clazz,
         // Convert Java string to std::string
         bufferInPrerecord[i] = jBuffer[i];
     }
-    CEPPitchDetection(bufferInPrerecord);
+    if(algo==0){
+        AutoCPitchDetection(bufferInPrerecord);
+    } else if (algo==1){
+        CEPPitchDetection(bufferInPrerecord);
+    } else if (algo==2){
+        PPROCPitchDetection(bufferInPrerecord);
+    }
+    else{
+        SIFTPitchDetection(bufferInPrerecord);
+    }
     // Release memory
     env->ReleaseFloatArrayElements(jframe,jBuffer,0);
     return lastFreqDetected;

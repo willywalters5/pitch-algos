@@ -1,6 +1,7 @@
 package com.ece420.lab4;
 import com.ece420.lab4.*;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.PointsGraphSeries;
@@ -45,7 +46,7 @@ public class PrerecordActivity extends Activity {
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 2048;
-    private static final int BITMAP_HEIGHT = 500;
+    private static final int radius=5;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,7 +68,15 @@ public class PrerecordActivity extends Activity {
         audioFemale=MediaPlayer.create(PrerecordActivity.this,R.raw.f_185);
         audioMale=MediaPlayer.create(PrerecordActivity.this,R.raw.m_82);
         graph = (GraphView) findViewById(R.id.graph);
-
+        GridLabelRenderer gridLabel = graph.getGridLabelRenderer();
+        gridLabel.setHorizontalAxisTitle("Time (s)");
+        gridLabel.setVerticalAxisTitle("Pitch (Hz)");
+        graph.getViewport().setMinX(-0.1);
+        graph.getViewport().setMaxX(3.5);
+        graph.getViewport().setMinY(0.0);
+        graph.getViewport().setMaxY(350);
+        graph.getViewport().setYAxisBoundsManual(true);
+        graph.getViewport().setXAxisBoundsManual(true);
     }
 
     public void onChangeActivityClick(View view){
@@ -99,20 +108,28 @@ public class PrerecordActivity extends Activity {
         radioButton = (RadioButton) findViewById(radioId);
         //Play audio associated with radioButton
         if(radioButton.getText().equals("Child_247")){
-            //audioChild.start();
+            Toast.makeText(this, "Analyzing Child audio",
+                    Toast.LENGTH_SHORT).show();
+            audioChild.start();
             InputStream inputStream=getResources().openRawResource(R.raw.c_247);
             WavFile wavFile=WavFile.openWavFile(inputStream);
             process_frames(wavFile);
         }
         else if(radioButton.getText().equals("Female_185")){
-            Toast.makeText(this, "Playing Female audio",
+            Toast.makeText(this, "Analyzing Female audio",
                     Toast.LENGTH_SHORT).show();
             audioFemale.start();
+            InputStream inputStream=getResources().openRawResource(R.raw.f_185);
+            WavFile wavFile=WavFile.openWavFile(inputStream);
+            process_frames(wavFile);
         }
         else if(radioButton.getText().equals("Male_82")){
-            Toast.makeText(this, "Playing Male audio",
+            Toast.makeText(this, "Analyzing Male audio",
                     Toast.LENGTH_SHORT).show();
             audioMale.start();
+            InputStream inputStream=getResources().openRawResource(R.raw.m_82);
+            WavFile wavFile=WavFile.openWavFile(inputStream);
+            process_frames(wavFile);
         }
     }
 
@@ -121,18 +138,63 @@ public class PrerecordActivity extends Activity {
         float[] data= new float[(int)wavFile.getNumFrames()];
         wavFile.readFrames(data,(int)wavFile.getNumFrames());
         float[] curr_frame = new float[FRAME_SIZE];
-        float[] pitch_values=new float[num_frames];
-        PointsGraphSeries<DataPoint> series = new PointsGraphSeries<>();
+        //float[] pitch_values=new float[num_frames];
+        graph.removeAllSeries();
+        PointsGraphSeries<DataPoint> series_CEP = new PointsGraphSeries<>();
+        PointsGraphSeries<DataPoint> series_PPROC = new PointsGraphSeries<>();
+        PointsGraphSeries<DataPoint> series_SIFT = new PointsGraphSeries<>();
+        PointsGraphSeries<DataPoint> series_AUTOC = new PointsGraphSeries<>();
+
+        series_CEP.setTitle("CEP");
+        series_PPROC.setTitle("PPROC");
+        series_SIFT.setTitle("SIFT");
+        series_AUTOC.setTitle("AUTOC");
+
         for(int i=0; i<num_frames; i++){
             curr_frame = Arrays.copyOfRange(data, i*FRAME_SIZE, (i+1)*FRAME_SIZE);
-            pitch_values[i]=getCEPUpdate(curr_frame);
-            series.appendData(new DataPoint(i*0.04,pitch_values[i]), true,num_frames);
+            if(mAUTOC.isChecked()){
+                series_AUTOC.appendData(new DataPoint(i*0.04,getUpdate(curr_frame,0)), true,num_frames);
+            }
+            if(mCEP.isChecked()){
+                series_CEP.appendData(new DataPoint(i*0.04,getUpdate(curr_frame,1)), true,num_frames);
+            }
+            if(mPPROC.isChecked()){
+                series_PPROC.appendData(new DataPoint(i*0.04,getUpdate(curr_frame,2)), true,num_frames);
+            }
+            if(mSIFT.isChecked()){
+                series_SIFT.appendData(new DataPoint(i*0.04,getUpdate(curr_frame,3)), true,num_frames);
+            }
         }
-        graph.addSeries(series);
-        series.setShape(PointsGraphSeries.Shape.POINT);
+        if(mAUTOC.isChecked()) {
+            graph.addSeries(series_AUTOC);
+            series_AUTOC.setShape(PointsGraphSeries.Shape.POINT);
+            series_AUTOC.setSize(radius);
+            series_AUTOC.setColor(Color.RED);
+
+        }
+        if(mCEP.isChecked()){
+            graph.addSeries(series_CEP);
+            series_CEP.setShape(PointsGraphSeries.Shape.POINT);
+            series_CEP.setSize(radius);
+            series_CEP.setColor(Color.GREEN);
+        }
+        if(mPPROC.isChecked()){
+            graph.addSeries(series_PPROC);
+            series_PPROC.setShape(PointsGraphSeries.Shape.POINT);
+            series_PPROC.setSize(radius);
+            series_PPROC.setColor(Color.BLUE);
+        }
+        if(mSIFT.isChecked()){
+            graph.addSeries(series_SIFT);
+            series_SIFT.setShape(PointsGraphSeries.Shape.POINT);
+            series_SIFT.setSize(radius);
+            series_SIFT.setColor(Color.YELLOW);
+        }
+        graph.getLegendRenderer().setVisible(true);
+
     }
 
-    public static native float getCEPUpdate(float [] curr_frame);
+    public static native float getUpdate(float [] curr_frame, int algo);
 
 }
 
