@@ -102,7 +102,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Step2: Choose ONE pre-recorded sound file." />
+            android:text="Step2: Choose ONE pre-recorded sound file, or Click Record button to record your own voice." />
     </LinearLayout>
 
     <LinearLayout
@@ -110,7 +110,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/instructions2"
-        android:layout_marginTop="20dp"
         android:orientation="horizontal">
         <RadioGroup
             android:layout_width="match_parent"
@@ -142,7 +141,22 @@
                 android:onClick="checkRadioButton"
                 android:text="Male_82" />
         </RadioGroup>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/instructions2"
+        android:layout_marginTop="90dp"
+        android:gravity="left"
+        android:orientation="horizontal">
 
+        <Button
+            android:id="@+id/record_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRecordClick"
+            android:text="Record/Analyze" />
     </LinearLayout>
 
     <LinearLayout
@@ -150,6 +164,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/prerecord_wav"
+        android:layout_marginTop="40dp"
+
         android:orientation="horizontal">
 
         <TextView
