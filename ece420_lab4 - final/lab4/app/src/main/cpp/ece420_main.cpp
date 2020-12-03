@@ -27,7 +27,7 @@ Java_com_ece420_lab4_PrerecordActivity_getUpdate(JNIEnv *env, jclass,jfloatArray
 // Student Variables
 #define F_S 48000
 #define FRAME_SIZE 2048
-#define VOICED_THRESHOLD 0  // Find your own threshold
+#define VOICED_THRESHOLD 1e6  // Find your own threshold
 #define START 40
 #define END FRAME_SIZE/4
 float lastFreqDetected = -1;
@@ -39,7 +39,7 @@ float bufferInPrerecord[FRAME_SIZE];
 #define CEP_ZERO_CROSSING_THRESHOLD FRAME_SIZE/3
 #define CEP_MAX_INTERVAL F_S/60
 #define CEP_MIN_INTERVAL F_S/300
-#define CEP_VOICED_THRESHOLD 2e9
+#define CEP_VOICED_THRESHOLD 1e8
 #define PI 3.1415926
 
 // PPROC Variables
