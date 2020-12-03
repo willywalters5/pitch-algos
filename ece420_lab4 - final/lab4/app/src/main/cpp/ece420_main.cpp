@@ -27,7 +27,7 @@ Java_com_ece420_lab4_PrerecordActivity_getUpdate(JNIEnv *env, jclass,jfloatArray
 // Student Variables
 #define F_S 48000
 #define FRAME_SIZE 2048
-#define VOICED_THRESHOLD 1e6  // Find your own threshold
+#define VOICED_THRESHOLD 1e8  // Find your own threshold
 #define START 40
 #define END FRAME_SIZE/4
 float lastFreqDetected = -1;
@@ -108,17 +108,20 @@ void AutoCPitchDetection(float *bufferIn){
     kiss_fft_cpx autoCfft[FRAME_SIZE] = {};
     kiss_fft_cpx autoC[FRAME_SIZE] = {};
     kiss_fft_cpx bufCpx[FRAME_SIZE];
-    kiss_fft_cfg cfg = kiss_fft_alloc( FRAME_SIZE ,0 ,NULL, NULL );
-    kiss_fft_cfg cfg_ifft = kiss_fft_alloc( FRAME_SIZE ,1 ,NULL, NULL );
+    kiss_fft_cfg cfg = kiss_fft_alloc(FRAME_SIZE, 0, NULL, NULL);
+    kiss_fft_cfg cfg_ifft = kiss_fft_alloc(FRAME_SIZE, 1, NULL, NULL);
     int numPeriods = 2;
-    float tolerance = 0.5;
-    int searchRange = FRAME_SIZE/numPeriods;
+    ///@todo find middle ground between V/U detection and accuraccy w/ tolerance and energy thresh
+    float tolerance = 0.6;
+    int searchRange = FRAME_SIZE / numPeriods;
     float maxAutoC = 0;
     float minAutoC = 999;
     int minFirst = 0;
     int maxFirst = 0;
     int minSecond = 0;
     int period = 0;
+    ///@note This fixes the issue of no good energy threshold, but now the results are less accurate
+    float normFactor = 0;
 
     //float testReal[2] = {1,2};
     //kiss_fft_cpx testCpx[2];
@@ -126,70 +129,76 @@ void AutoCPitchDetection(float *bufferIn){
     // Check if frame is voiced and also prepare buffer for fft if needed
     float energy = 0;
     int i;
-    for(i = 0; i < FRAME_SIZE; ++i) {
-        energy += abs(bufferIn[i])*abs(bufferIn[i]);
+    for (i = 0; i < FRAME_SIZE; ++i) {
+        energy += abs(bufferIn[i]) * abs(bufferIn[i]);
         bufCpx[i].r = bufferIn[i];
         bufCpx[i].i = 0;
+        normFactor += energy;
     }
-    if(energy < VOICED_THRESHOLD) {
+    if (energy < VOICED_THRESHOLD) {
         lastFreqDetected = -1;
         return;
     }
 
     // Find the auto correlation using fft method
-    kiss_fft(cfg, bufCpx , autoCfft);
+    kiss_fft(cfg, bufCpx, autoCfft);
     free(cfg);
-    for(i = 0; i < FRAME_SIZE; ++i) {
+    for (i = 0; i < FRAME_SIZE; ++i) {
         // fft(x) * conj(fft(x))
-        autoCfft[i].r = (autoCfft[i].r*autoCfft[i].r) + (autoCfft[i].i*autoCfft[i].i);
+        autoCfft[i].r = (autoCfft[i].r * autoCfft[i].r) + (autoCfft[i].i * autoCfft[i].i);
         autoCfft[i].i = 0;
     }
     kiss_fft(cfg_ifft, autoCfft, autoC);
     free(cfg_ifft);
 
+    ///@todo integrate if works
+    for (i = 0; i < FRAME_SIZE; ++i) {
+        autoC[i].r /= normFactor;
+    }
+
     // Find the min and max of the autoCorrelation
     //maxAutoC = std::max_element(autoC + 2, autoC + searchRange)->r;
     //minAutoC = std::min_element(autoC + 2, autoC + searchRange)->r;
-    for(i = 2; i < searchRange; ++i) {
-        if(maxAutoC < autoC[i].r) {
+    for (i = 2; i < searchRange; ++i) {
+        if (maxAutoC < autoC[i].r) {
             maxAutoC = autoC[i].r;
         }
-        if(minAutoC > autoC[i].r) {
+        if (minAutoC > autoC[i].r) {
             minAutoC = autoC[i].r;
         }
     }
 
     // Find first min
-    for(i = 2; i < searchRange; ++i) {
-        if(autoC[i].r <= minAutoC + tolerance) {
+    for (i = 2; i < searchRange; ++i) {
+        if (autoC[i].r <= minAutoC + tolerance) {
             minFirst = i;
             break;
         }
     }
     // Find First max after first min
-    for(i = minFirst; i < searchRange; ++i) {
-        if(autoC[i].r >= maxAutoC - tolerance) {
+    for (i = minFirst; i < searchRange; ++i) {
+        if (autoC[i].r >= maxAutoC - tolerance) {
             maxFirst = i;
             break;
         }
     }
     // Find next min
-    for(i = maxFirst; i < searchRange; ++i) {
+    for (i = maxFirst; i < searchRange; ++i) {
         minSecond = i;
-        if(autoC[i].r <= minAutoC + tolerance) {
+        if (autoC[i].r <= minAutoC + tolerance) {
             break;
         }
     }
 
     // Calculate period
-    for(i = maxFirst; i < minSecond; ++i) {
-        if(autoC[i].r > autoC[period].r) {
+    for (i = maxFirst; i < minSecond; ++i) {
+        if (autoC[i].r > autoC[period].r) {
             period = i;
         }
     }
     //period = findMaxArrayIdx(autoC.r, maxFirst, minSecond) + maxFirst;
     period += maxFirst;
-    lastFreqDetected = F_S/period;
+    lastFreqDetected = F_S / period;
 
     return;
 }
@@ -264,64 +273,60 @@ void PPROCPitchDetection(float *bufferIn) {
     }
 
     // Apply Kaiser window
-    for(int sampleIdx = 0; sampleIdx < FRAME_SIZE; sampleIdx++) {
+    for (int sampleIdx = 0; sampleIdx < FRAME_SIZE; sampleIdx++) {
         bufferIn[sampleIdx] *= kaiserWin.getKaiserCoef(sampleIdx);
     }
 
     // V/U detection
     float energy = 0;
-    for(int i = 0 ; i < FRAME_SIZE; i++) {
+    for (int i = 0; i < FRAME_SIZE; i++) {
         energy += bufferIn[i] * bufferIn[i];
     }
-    if(energy < 1e5) {
-       lastFreqDetected = -1;
-       return;
+    if (energy < VOICED_THRESHOLD) {
+        lastFreqDetected = -1;
+        return;
     }
 
     // Make peak measurements
-    ///@note stack overflow anyone?
     float m1[FRAME_SIZE] = {};
     float m2[FRAME_SIZE] = {};
     float m3[FRAME_SIZE] = {};
     float m4[FRAME_SIZE] = {};
     float m5[FRAME_SIZE] = {};
     float m6[FRAME_SIZE] = {};
-    find_peaks(bufferIn, m1, m2 ,m3, m4, m5, m6);
-    float* peaks[6] = {m1, m2, m3, m4, m5, m6};
+    find_peaks(bufferIn, m1, m2, m3, m4, m5, m6);
+    float* peaks[6] = { m1, m2, m3, m4, m5, m6 };
 
     // Update previous PPEs
     ///@todo optimize w/out dynamic allocation
-    if(prevPPE_2 != NULL)
+    if (prevPPE_2 != NULL)
         delete[] prevPPE_2;
     prevPPE_2 = prevPPE_1;
     prevPPE_1 = ppe;
     ppe = new double[6];
 
     // Get current PPE
-    for(int j = 0; j < 6; ++j) {
+    for (int j = 0; j < 6; ++j) {
         ppe[j] = peak_rundown(peaks[j]);
     }
-    if(prevPPE_2 == NULL || prevPPE_1 == NULL) {
+    if (prevPPE_2 == NULL || prevPPE_1 == NULL) {
         lastFreqDetected = -1;
         return;
     }
 
     // Create PPE matrix
     ///@todo see if this is necessary
-    double* peMatrix = new double[36]; // Please no stack overflow :)
-   // double* peMatAddr = &peMatrix[0][0]; ///@note this is unsafe, but ok because we know it is 6x6
+    double* peMatrix = new double[36];
     create_pitch_matrix(ppe, prevPPE_1, prevPPE_2, peMatrix);
 
     // Find current best pitch estimate
     prevWinner = calculate_ppe_winner(peMatrix, prevWinner);
     delete[] peMatrix;
 
-    if(prevWinner == -1)
+    if (prevWinner == -1)
         lastFreqDetected = -1;
     else
-        lastFreqDetected = 1/prevWinner;
-    //*/
-    //lastFreqDetected = -1;
+        lastFreqDetected = 1 / prevWinner;
 }
 
 void SIFTPitchDetection(float *bufferIn){
