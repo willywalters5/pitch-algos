@@ -147,7 +147,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/instructions2"
-        android:layout_marginTop="90dp"
+        android:layout_marginTop="100dp"
         android:gravity="left"
         android:orientation="horizontal">
 
@@ -170,7 +170,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/prerecord_wav"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="60dp"
 
         android:orientation="horizontal">
 
@@ -318,7 +318,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Average Pitch (Hz): " />
+            android:text="Average Pitch(Hz): " />
 
         <TextView
             android:id="@+id/cep_avg"
@@ -361,7 +361,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Standard deviation (Hz): " />
+            android:text="Standard deviation(Hz): " />
 
         <TextView
             android:id="@+id/cep_std"
@@ -404,7 +404,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="V/UV ratio(%): " />
+            android:text="Voiced ratio(%): " />
 
         <TextView
             android:id="@+id/cep_vuv"
