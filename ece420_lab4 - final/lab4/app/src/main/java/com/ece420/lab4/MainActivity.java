@@ -204,6 +204,7 @@ public class MainActivity extends Activity
         AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         nativeSampleRate  =  myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
         nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+
         int recBufSize = AudioRecord.getMinBufferSize(
                 Integer.parseInt(nativeSampleRate),
                 AudioFormat.CHANNEL_IN_MONO,
@@ -222,7 +223,7 @@ public class MainActivity extends Activity
         }
 
         statusView.setText("nativeSampleRate    = " + nativeSampleRate + "\n" +
-                "nativeSampleBufSize = " + nativeSampleBufSize + "\n");
+                "nativeSampleBufSize = " + FRAME_SIZE + "\n");
 
     }
     @Override
