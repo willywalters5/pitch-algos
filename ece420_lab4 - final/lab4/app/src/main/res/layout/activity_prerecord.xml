@@ -156,7 +156,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="onRecordClick"
-            android:text="Record/Analyze" />
+            android:text="Record" />
+        <Button
+            android:id="@+id/record_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onStopClick"
+            android:text="STOP" />
     </LinearLayout>
 
     <LinearLayout
@@ -185,11 +191,17 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/capture_control_button"
+            android:id="@+id/capture_control_button_prerecord"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="onAnalyzeClick"
-            android:text="Analyze" />
+            android:text="Analyze Prerecord" />
+        <Button
+            android:id="@+id/capture_control_button_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onAnalyzeRecordingClick"
+            android:text="Analyze Recording" />
     </LinearLayout>
 
     <LinearLayout

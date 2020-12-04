@@ -54,7 +54,7 @@ public class PrerecordActivity extends Activity {
     //RadioButton mChild,mFemale,mMale;
     RadioButton radioButton,mChild,mFemale,mMale;
     RadioGroup radioGroup;
-    Button clear,analyze;
+    Button clear,analyze,record,recordStop,analyzeRecord;
     MediaPlayer audioChild,audioFemale,audioMale;
     GraphView graph;
     TextView cep_time,pproc_time,sift_time,autoc_time;
@@ -97,10 +97,14 @@ public class PrerecordActivity extends Activity {
         mSIFT=(CheckBox)findViewById(R.id.SIFT);
         mAUTOC=(CheckBox)findViewById(R.id.AUTOC);
         clear=(Button)findViewById(R.id.clear);
-        analyze=(Button)findViewById(R.id.capture_control_button);
+        analyze=(Button)findViewById(R.id.capture_control_button_prerecord);
         mChild=(RadioButton)findViewById(R.id.record_c);
         mFemale=(RadioButton)findViewById(R.id.record_f);
         mMale=(RadioButton)findViewById(R.id.record_m);
+        record=(Button)findViewById(R.id.record_button);
+        analyzeRecord=(Button)findViewById(R.id.capture_control_button_recording);
+        recordStop=(Button)findViewById(R.id.record_stop);
+        recordStop.setEnabled(false);
 
         radioGroup=(RadioGroup)findViewById(R.id.radio_group);
         audioChild=MediaPlayer.create(PrerecordActivity.this,R.raw.c_247);
@@ -175,16 +179,23 @@ public class PrerecordActivity extends Activity {
         mAUTOC.setChecked(false);
     }
     public void onRecordClick(View view) throws IOException, WavFileException {
-        if (!mCEP.isChecked() && !mPPROC.isChecked() && !mSIFT.isChecked() && !mAUTOC.isChecked()){
-            Toast.makeText(this, "Please select at least one algorithm!",
-                    Toast.LENGTH_SHORT).show();
-            analyze.setEnabled(true);
-            return;
-        }
+        recordStop.setEnabled(true);
+        setAnalyzeButtonsStatus(false);
         if(!isRecording){
+            record.setEnabled(false);
             wavRecorder.startRecording();
             isRecording=true;
             Toast.makeText(this, "Start recording",
+                    Toast.LENGTH_SHORT).show();
+        }
+        setAnalyzeButtonsStatus(true);
+    }
+
+    public void onStopClick(View view) throws IOException, WavFileException {
+        record.setEnabled(true);
+        setAnalyzeButtonsStatus(true);
+        if(!isRecording){
+            Toast.makeText(this, "Recording has not started.",
                     Toast.LENGTH_SHORT).show();
         }
         else {
@@ -192,9 +203,26 @@ public class PrerecordActivity extends Activity {
             isRecording = false;
             Toast.makeText(this, "Stop recording",
                     Toast.LENGTH_SHORT).show();
+            recordStop.setEnabled(false);
+        }
+    }
+
+    public void onAnalyzeRecordingClick(View view) throws IOException, WavFileException {
+        record.setEnabled(false);
+        recordStop.setEnabled(false);
+        setAnalyzeButtonsStatus(false);
+        if(!isRecording){
             player.stop();
             player.reset();
             try {
+                File file = new File(filePath);
+                if(!file.exists()){
+                    Toast.makeText(this, "You don't have any recording on file!",
+                            Toast.LENGTH_SHORT).show();
+                    analyzeRecord.setEnabled(true);
+                    analyze.setEnabled(true);
+                    return;
+                }
                 player.setDataSource(filePath);
                 player.prepare();
                 player.start();
@@ -206,9 +234,9 @@ public class PrerecordActivity extends Activity {
             WavFile wavFile=WavFile.openWavFile(inputStream);
             process_frames(wavFile);
         }
-
+        setRecordButtonsStatus(true);
+        setAnalyzeButtonsStatus(true);
     }
-
 //    public void onRecordClick(View view)
 //    {
 //        // when click to START
@@ -302,19 +330,32 @@ public class PrerecordActivity extends Activity {
                 Toast.LENGTH_SHORT).show();
     }
 
+    public void setAnalyzeButtonsStatus(boolean value){
+        analyze.setEnabled(value);
+        analyzeRecord.setEnabled(value);
+    }
+
+    public void setRecordButtonsStatus(boolean value){
+        record.setEnabled(value);
+        recordStop.setEnabled(!value);
+    }
     public void onAnalyzeClick(View view) throws IOException, WavFileException {
         clearMetric();
-        analyze.setEnabled(false);
+        record.setEnabled(false);
+        recordStop.setEnabled(false);
+        setAnalyzeButtonsStatus(false);
         if (!mCEP.isChecked() && !mPPROC.isChecked() && !mSIFT.isChecked() && !mAUTOC.isChecked()){
             Toast.makeText(this, "Please select at least one algorithm!",
                     Toast.LENGTH_SHORT).show();
-            analyze.setEnabled(true);
+            setRecordButtonsStatus(true);
+            setAnalyzeButtonsStatus(true);
             return;
         }
         if (!mChild.isChecked() && !mFemale.isChecked() && !mMale.isChecked()){
             Toast.makeText(this, "Please select at least one sound file!",
                     Toast.LENGTH_SHORT).show();
-            analyze.setEnabled(true);
+            setRecordButtonsStatus(true);
+            setAnalyzeButtonsStatus(true);
             return;
         }
         int radioId = radioGroup.getCheckedRadioButtonId();
@@ -347,7 +388,8 @@ public class PrerecordActivity extends Activity {
             WavFile wavFile=WavFile.openWavFile(inputStream);
             process_frames(wavFile);
         }
-        analyze.setEnabled(true);
+        setRecordButtonsStatus(true);
+        setAnalyzeButtonsStatus(true);
     }
 
     public void process_frames(WavFile wavFile) throws IOException, WavFileException {
@@ -539,6 +581,14 @@ public class PrerecordActivity extends Activity {
         pproc_std_error.setText("N/a");
         sift_std_error.setText("N/a");
         autoc_std_error.setText("N/a");
+    }
+    @Override
+    protected void onPause() {
+        //stop mediaplayer:
+        if (player.isPlaying()) {
+            player.stop();
+        }
+        super.onPause();
     }
     public static native float getUpdate(float [] curr_frame, int algo);
 
