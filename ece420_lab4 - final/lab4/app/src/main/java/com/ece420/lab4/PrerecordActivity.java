@@ -120,6 +120,10 @@ public class PrerecordActivity extends Activity {
         graph.getViewport().setMaxY(350);
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setScalable(true);  // activate horizontal zooming and scrolling
+        graph.getViewport().setScrollable(true);  // activate horizontal scrolling
+        graph.getViewport().setScalableY(true);  // activate horizontal and vertical zooming and scrolling
+        graph.getViewport().setScrollableY(true);  // activate vertical scrolling
 
         cep_time=(TextView)findViewById(R.id.cep_time);
         pproc_time=(TextView)findViewById(R.id.pproc_time);
@@ -422,25 +426,25 @@ public class PrerecordActivity extends Activity {
             curr_frame = Arrays.copyOfRange(data, i*FRAME_SIZE, (i+1)*FRAME_SIZE);
             if(mAUTOC.isChecked()){
                 time_stamp = System.currentTimeMillis();
-                pitch_values_autoc[i]=getUpdate(curr_frame,0);
+                pitch_values_autoc[i]=Math.max(0,getUpdate(curr_frame,0));
                 time_autoc+=System.currentTimeMillis()-time_stamp;
                 series_AUTOC.appendData(new DataPoint(i*0.04,pitch_values_autoc[i]), true,num_frames);
             }
             if(mCEP.isChecked()){
                 time_stamp = System.currentTimeMillis();
-                pitch_values_cep[i]=getUpdate(curr_frame,1);
+                pitch_values_cep[i]=Math.max(0,getUpdate(curr_frame,1));
                 time_cep+=System.currentTimeMillis()-time_stamp;
                 series_CEP.appendData(new DataPoint(i*0.04,pitch_values_cep[i]), true,num_frames);
             }
             if(mPPROC.isChecked()){
                 time_stamp = System.currentTimeMillis();
-                pitch_values_pproc[i]=getUpdate(curr_frame,2);
+                pitch_values_pproc[i]=Math.max(0,getUpdate(curr_frame,2));
                 time_pproc+=System.currentTimeMillis()-time_stamp;
                 series_PPROC.appendData(new DataPoint(i*0.04,pitch_values_pproc[i]), true,num_frames);
             }
             if(mSIFT.isChecked()){
                 time_stamp = System.currentTimeMillis();
-                pitch_values_sift[i]=getUpdate(curr_frame,3);
+                pitch_values_sift[i]=Math.max(0,getUpdate(curr_frame,3));
                 time_sift+=System.currentTimeMillis()-time_stamp;
                 series_SIFT.appendData(new DataPoint(i*0.04,pitch_values_sift[i]), true,num_frames);
             }

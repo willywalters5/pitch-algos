@@ -275,7 +275,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Computation Time(ms)" />
+            android:text="Computation Time(ms):" />
 
         <TextView
             android:id="@+id/cep_time"
