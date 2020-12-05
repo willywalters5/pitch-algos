@@ -523,28 +523,28 @@ public class PrerecordActivity extends Activity {
         if(algo==0){
             autoc_avg.setText(String.format("%.2f", avg));
             autoc_std.setText(String.format("%.2f", std));
-            autoc_vuv.setText(String.format("%.2f%%", vuv));
+            autoc_vuv.setText(String.format("%.2f%%", vuv*100));
             autoc_ferror.setText(String.format("%.2f", ferror));
             autoc_std_error.setText(String.format("%.2f", std_error));
         }
         if(algo==1){
             cep_avg.setText(String.format("%.2f", avg));
             cep_std.setText(String.format("%.2f", std));
-            cep_vuv.setText(String.format("%.2f%%", vuv));
+            cep_vuv.setText(String.format("%.2f%%", vuv*100));
             cep_ferror.setText(String.format("%.2f", ferror));
             cep_std_error.setText(String.format("%.2f", std_error));
         }
         if(algo==2){
             pproc_avg.setText(String.format("%.2f", avg));
             pproc_std.setText(String.format("%.2f", std));
-            pproc_vuv.setText(String.format("%.2f%%", vuv));
+            pproc_vuv.setText(String.format("%.2f%%", vuv*100));
             pproc_ferror.setText(String.format("%.2f", ferror));
             pproc_std_error.setText(String.format("%.2f", std_error));
         }
         if(algo==3){
             sift_avg.setText(String.format("%.2f", avg));
             sift_std.setText(String.format("%.2f", std));
-            sift_vuv.setText(String.format("%.2f%%", vuv));
+            sift_vuv.setText(String.format("%.2f%%", vuv*100));
             sift_ferror.setText(String.format("%.2f", ferror));
             sift_std_error.setText(String.format("%.2f", std_error));
         }

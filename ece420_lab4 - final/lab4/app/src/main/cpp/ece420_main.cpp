@@ -51,6 +51,9 @@ double* prevPPE_2 = NULL;
 double* ppe = NULL;
 double prevWinner = -1;
 
+#define DS_FRAME_SIZE 410
+float siftCircBuf[PPROC_N_TAPS] = {};
+int siftCircBufIdx = 0;
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
@@ -330,9 +333,247 @@ void PPROCPitchDetection(float *bufferIn) {
 }
 
 void SIFTPitchDetection(float *bufferIn){
-    lastFreqDetected=-1;
-}
+    kiss_fft_cpx autoCfft[FRAME_SIZE] = {};
+    kiss_fft_cpx autoC[FRAME_SIZE] = {};
+    kiss_fft_cpx bufCpx[FRAME_SIZE];
+    kiss_fft_cfg cfg = kiss_fft_alloc(FRAME_SIZE, 0, NULL, NULL);
+    kiss_fft_cfg cfg_ifft = kiss_fft_alloc(FRAME_SIZE, 1, NULL, NULL);
+    int numPeriods = 2;
+    float tolerance = 0.6;
+    int searchRange = FRAME_SIZE / numPeriods;
+    float maxAutoC = 0;
+    float minAutoC = 999;
+    int minFirst = 0;
+    int maxFirst = 0;
+    int minSecond = 0;
+    int period = 0;
+    float normFactor = 0;
 
+    for (int sampleIdx = 0; sampleIdx < FRAME_SIZE; sampleIdx++) {
+        float sample = bufferIn[sampleIdx];
+        float output = firFilter(sample, siftCircBuf, siftCircBufIdx);
+        bufferIn[sampleIdx] = output;
+    }
+
+    float energy = 0;
+    int counter = 0;
+    int i =0;
+
+    //Downsample by 5 after LPF
+    for (int j = 0; j < FRAME_SIZE; j += 5) {
+        energy += abs(bufferIn[j])*abs(bufferIn[j]);
+        bufCpx[counter].r = bufferIn[j];
+        bufCpx[counter].i = 0;
+        normFactor += energy;
+        counter++;
+    }
+
+    if (energy < 20000000) {
+        lastFreqDetected = -1;
+        return;
+    }
+    // Find the auto correlation using fft method
+    kiss_fft(cfg, bufCpx, autoCfft);
+    free(cfg);
+    for (i = 0; i < FRAME_SIZE; ++i) {
+        // fft(x) * conj(fft(x))
+        autoCfft[i].r = (autoCfft[i].r * autoCfft[i].r) + (autoCfft[i].i * autoCfft[i].i);
+        autoCfft[i].i = 0;
+    }
+    kiss_fft(cfg_ifft, autoCfft, autoC);
+    free(cfg_ifft);
+
+    for (i = 0; i < FRAME_SIZE; ++i) {
+        autoC[i].r /= normFactor;
+    }
+
+
+    float R[4][4] = {};
+    int len = (DS_FRAME_SIZE/2)-1;
+    for (int j = 0; j<4; j++)
+    {
+        R[j][j]=autoC[len].r;
+        for(int k = j+1; k<4; k++){
+            R[j][k]=autoC[len+k-j].r;
+            R[k][j]=autoC[len+k-j].r;
+        }
+    }
+
+    float m[16] = {};
+    for(int j = 0; j<4; j++) {
+        for (int k = j; k < 4; k++) {
+            m[j * 4 + k]+=R[j][k];
+        }
+    }
+
+    float inv[16], det;
+
+    inv[0] = m[5]  * m[10] * m[15] -
+             m[5]  * m[11] * m[14] -
+             m[9]  * m[6]  * m[15] +
+             m[9]  * m[7]  * m[14] +
+             m[13] * m[6]  * m[11] -
+             m[13] * m[7]  * m[10];
+
+    inv[4] = -m[4]  * m[10] * m[15] +
+             m[4]  * m[11] * m[14] +
+             m[8]  * m[6]  * m[15] -
+             m[8]  * m[7]  * m[14] -
+             m[12] * m[6]  * m[11] +
+             m[12] * m[7]  * m[10];
+
+    inv[8] = m[4]  * m[9] * m[15] -
+             m[4]  * m[11] * m[13] -
+             m[8]  * m[5] * m[15] +
+             m[8]  * m[7] * m[13] +
+             m[12] * m[5] * m[11] -
+             m[12] * m[7] * m[9];
+
+    inv[12] = -m[4]  * m[9] * m[14] +
+              m[4]  * m[10] * m[13] +
+              m[8]  * m[5] * m[14] -
+              m[8]  * m[6] * m[13] -
+              m[12] * m[5] * m[10] +
+              m[12] * m[6] * m[9];
+
+    inv[1] = -m[1]  * m[10] * m[15] +
+             m[1]  * m[11] * m[14] +
+             m[9]  * m[2] * m[15] -
+             m[9]  * m[3] * m[14] -
+             m[13] * m[2] * m[11] +
+             m[13] * m[3] * m[10];
+
+    inv[5] = m[0]  * m[10] * m[15] -
+             m[0]  * m[11] * m[14] -
+             m[8]  * m[2] * m[15] +
+             m[8]  * m[3] * m[14] +
+             m[12] * m[2] * m[11] -
+             m[12] * m[3] * m[10];
+
+    inv[9] = -m[0]  * m[9] * m[15] +
+             m[0]  * m[11] * m[13] +
+             m[8]  * m[1] * m[15] -
+             m[8]  * m[3] * m[13] -
+             m[12] * m[1] * m[11] +
+             m[12] * m[3] * m[9];
+
+    inv[13] = m[0]  * m[9] * m[14] -
+              m[0]  * m[10] * m[13] -
+              m[8]  * m[1] * m[14] +
+              m[8]  * m[2] * m[13] +
+              m[12] * m[1] * m[10] -
+              m[12] * m[2] * m[9];
+
+    inv[2] = m[1]  * m[6] * m[15] -
+             m[1]  * m[7] * m[14] -
+             m[5]  * m[2] * m[15] +
+             m[5]  * m[3] * m[14] +
+             m[13] * m[2] * m[7] -
+             m[13] * m[3] * m[6];
+
+    inv[6] = -m[0]  * m[6] * m[15] +
+             m[0]  * m[7] * m[14] +
+             m[4]  * m[2] * m[15] -
+             m[4]  * m[3] * m[14] -
+             m[12] * m[2] * m[7] +
+             m[12] * m[3] * m[6];
+
+    inv[10] = m[0]  * m[5] * m[15] -
+              m[0]  * m[7] * m[13] -
+              m[4]  * m[1] * m[15] +
+              m[4]  * m[3] * m[13] +
+              m[12] * m[1] * m[7] -
+              m[12] * m[3] * m[5];
+
+    inv[14] = -m[0]  * m[5] * m[14] +
+              m[0]  * m[6] * m[13] +
+              m[4]  * m[1] * m[14] -
+              m[4]  * m[2] * m[13] -
+              m[12] * m[1] * m[6] +
+              m[12] * m[2] * m[5];
+
+    inv[3] = -m[1] * m[6] * m[11] +
+             m[1] * m[7] * m[10] +
+             m[5] * m[2] * m[11] -
+             m[5] * m[3] * m[10] -
+             m[9] * m[2] * m[7] +
+             m[9] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] -
+             m[0] * m[7] * m[10] -
+             m[4] * m[2] * m[11] +
+             m[4] * m[3] * m[10] +
+             m[8] * m[2] * m[7] -
+             m[8] * m[3] * m[6];
+
+    inv[11] = -m[0] * m[5] * m[11] +
+              m[0] * m[7] * m[9] +
+              m[4] * m[1] * m[11] -
+              m[4] * m[3] * m[9] -
+              m[8] * m[1] * m[7] +
+              m[8] * m[3] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] -
+              m[0] * m[6] * m[9] -
+              m[4] * m[1] * m[10] +
+              m[4] * m[2] * m[9] +
+              m[8] * m[1] * m[6] -
+              m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+
+    det = 1.0 / det;
+
+    for ( i = 0; i < 16; i++)
+        m[i] = inv[i] * det;
+
+    // Find the min and max of the autoCorrelation
+    //maxAutoC = std::max_element(autoC + 2, autoC + searchRange)->r;
+    //minAutoC = std::min_element(autoC + 2, autoC + searchRange)->r;
+    for (i = 2; i < searchRange; ++i) {
+        if (maxAutoC < autoC[i].r) {
+            maxAutoC = autoC[i].r;
+        }
+        if (minAutoC > autoC[i].r) {
+            minAutoC = autoC[i].r;
+        }
+    }
+
+    // Find first min
+    for (i = 2; i < searchRange; ++i) {
+        if (autoC[i].r <= minAutoC + tolerance) {
+            minFirst = i;
+            break;
+        }
+    }
+    // Find First max after first min
+    for (i = minFirst; i < searchRange; ++i) {
+        if (autoC[i].r >= maxAutoC - tolerance) {
+            maxFirst = i;
+            break;
+        }
+    }
+    // Find next min
+    for (i = maxFirst; i < searchRange; ++i) {
+        minSecond = i;
+        if (autoC[i].r <= minAutoC + tolerance) {
+            break;
+        }
+    }
+
+    // Calculate period
+    for (i = maxFirst; i < minSecond; ++i) {
+        if (autoC[i].r > autoC[period].r) {
+            period = i;
+        }
+    }
+    //period = findMaxArrayIdx(autoC.r, maxFirst, minSecond) + maxFirst;
+    period += maxFirst;
+    lastFreqDetected = F_S / period/5;
+
+    return;
+}
 
 extern "C" JNIEXPORT float JNICALL
 Java_com_ece420_lab4_MainActivity_getFreqUpdate(JNIEnv *env, jclass, jint algo) {

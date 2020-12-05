@@ -447,7 +447,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Fine Error Rate(%): " />
+            android:text="Mean of Fine Error Rate(Hz):" />
 
         <TextView
             android:id="@+id/cep_ferror"
@@ -490,7 +490,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Std Error Rate(%): " />
+            android:text="Std of Fine Error Rate(Hz): " />
 
         <TextView
             android:id="@+id/cep_std_error"
